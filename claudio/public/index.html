@@ -3,190 +3,282 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CLAUDIO — Assistente Pessoal</title>
+<title>NEXUS — Sistema de Agentes IA</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --gold:#ffb700; --gold-dim:#ffb70030; --gold-glow:#ffb70080;
+  --amber:#ff8c00; --ember:#ff4500; --red:#ff2200;
+  --bg:#050301; --panel:#0a0602; --border:#251200;
+  --text:#c8a060; --bright:#ffe8b0; --muted:rgba(200,160,96,.4);
+}
+
 *{margin:0;padding:0;box-sizing:border-box;}
-:root{--gold:#ffb700;--amber:#ff8c00;--ember:#ff4500;--bg:#060401;--border:#2a1500;--text:#c8a060;--bright:#ffe8b0;}
-body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);height:100vh;overflow:hidden;cursor:crosshair;}
-#bgc{position:fixed;inset:0;z-index:0;}
-.grid{position:fixed;inset:0;z-index:1;background-image:linear-gradient(rgba(255,183,0,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,183,0,.018) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
-.vign{position:fixed;inset:0;z-index:2;background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,.9) 100%);pointer-events:none;}
-.scan{position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,183,0,.18),transparent);animation:sc 8s linear infinite;pointer-events:none;z-index:999;}
-@keyframes sc{0%{top:0;opacity:0}5%{opacity:1}95%{opacity:.3}100%{top:100vh;opacity:0}}
-.corner{position:fixed;width:20px;height:20px;border-color:rgba(255,183,0,.35);border-style:solid;pointer-events:none;z-index:999;}
-.tl{top:10px;left:10px;border-width:1px 0 0 1px}.tr{top:10px;right:10px;border-width:1px 1px 0 0}
-.bl{bottom:10px;left:10px;border-width:0 0 1px 1px}.br{bottom:10px;right:10px;border-width:0 1px 1px 0}
+body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);height:100vh;overflow:hidden;cursor:default;}
 
-.shell{position:relative;z-index:10;display:grid;grid-template-rows:52px 1fr 60px;grid-template-columns:190px 1fr 175px;height:100vh;}
+/* ── BG CANVAS ── */
+#bgc{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.grid-ov{position:fixed;inset:0;z-index:1;background-image:linear-gradient(rgba(255,183,0,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,183,0,.015) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;}
+.vign{position:fixed;inset:0;z-index:2;background:radial-gradient(ellipse at center,transparent 25%,rgba(0,0,0,.92) 100%);pointer-events:none;}
+.scanline{position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,183,0,.15),transparent);animation:sc 9s linear infinite;pointer-events:none;z-index:999;}
+@keyframes sc{0%{top:0;opacity:0}4%{opacity:1}96%{opacity:.3}100%{top:100vh;opacity:0}}
 
-header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);background:rgba(6,4,1,.92);position:relative;}
-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),var(--amber),var(--gold),transparent);animation:hl 4s ease-in-out infinite;}
-@keyframes hl{0%,100%{opacity:.28}50%{opacity:.8}}
-.logo{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;letter-spacing:8px;color:var(--gold);animation:lp 5s ease-in-out infinite;}
-@keyframes lp{0%,100%{text-shadow:0 0 20px rgba(255,183,0,.4)}50%{text-shadow:0 0 40px rgba(255,183,0,.8),0 0 80px rgba(255,183,0,.3)}}
-.hc{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,183,0,.55);letter-spacing:2px;display:flex;align-items:center;gap:12px;}
-.sdot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);animation:bd 2.5s ease-in-out infinite;}
-@keyframes bd{0%,100%{opacity:1}50%{opacity:.2}}
-.hr{font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(255,183,0,.35);text-align:right;line-height:1.7;}
+/* ── CORNERS ── */
+.corner{position:fixed;width:24px;height:24px;border-color:rgba(255,183,0,.3);border-style:solid;pointer-events:none;z-index:999;}
+.tl{top:12px;left:12px;border-width:1px 0 0 1px}.tr{top:12px;right:12px;border-width:1px 1px 0 0}
+.bl{bottom:12px;left:12px;border-width:0 0 1px 1px}.br{bottom:12px;right:12px;border-width:0 1px 1px 0}
 
-.lp,.rp{padding:12px 10px;display:flex;flex-direction:column;gap:9px;background:rgba(6,4,1,.93);overflow:hidden;}
-.lp{border-right:1px solid var(--border)}.rp{border-left:1px solid var(--border)}
-.pt{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:2.5px;color:rgba(255,183,0,.28);text-transform:uppercase;padding-bottom:4px;border-bottom:1px solid var(--border);}
-.sr{display:flex;justify-content:space-between;font-size:10px;padding:2px 0;}
-.sl{color:rgba(200,160,96,.45);font-size:8px;}.sv{font-family:'Share Tech Mono',monospace;color:var(--gold);font-size:9px;}
-.sv.ok{color:#ffcc44;}.sv.w{color:var(--amber);}
-.bw{margin-top:2px;}
-.bl2{display:flex;justify-content:space-between;font-size:7px;color:rgba(200,160,96,.38);margin-bottom:2px;font-family:'Share Tech Mono',monospace;}
-.bar{height:2px;background:rgba(255,183,0,.07);border-radius:1px;overflow:hidden;}
-.bf{height:100%;background:linear-gradient(90deg,var(--ember),var(--gold));border-radius:1px;transition:width .8s;}
-.mbg{display:inline-block;padding:2px 7px;background:rgba(255,183,0,.06);border:1px solid rgba(255,183,0,.15);border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--gold);text-align:center;}
+/* ── LAYOUT ── */
+.app{position:relative;z-index:10;display:grid;grid-template-columns:60px 240px 1fr;grid-template-rows:1fr;height:100vh;}
 
+/* ── ICON SIDEBAR ── */
+.icon-bar{border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px;background:rgba(5,3,1,.95);}
+.icon-logo{font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:var(--gold);letter-spacing:2px;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);margin-bottom:16px;text-shadow:0 0 15px var(--gold-glow);}
+.icon-btn{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:16px;color:var(--muted);border:1px solid transparent;}
+.icon-btn:hover,.icon-btn.active{background:rgba(255,183,0,.08);border-color:rgba(255,183,0,.2);color:var(--gold);}
+.icon-btn.active{box-shadow:0 0 12px var(--gold-dim);}
+.icon-sep{width:24px;height:1px;background:var(--border);margin:4px 0;}
+
+/* ── AGENT LIST PANEL ── */
+.agent-panel{border-right:1px solid var(--border);display:flex;flex-direction:column;background:rgba(8,5,1,.95);}
+.ap-header{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
+.ap-title{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:3px;margin-bottom:10px;}
+.ap-search{width:100%;background:rgba(255,183,0,.04);border:1px solid rgba(255,183,0,.12);border-radius:5px;padding:7px 10px;color:var(--bright);font-family:'Rajdhani',sans-serif;font-size:12px;outline:none;caret-color:var(--gold);}
+.ap-search::placeholder{color:rgba(255,183,0,.22);}
+.new-btn{width:100%;margin-top:8px;padding:8px;background:linear-gradient(135deg,rgba(255,183,0,.12),rgba(255,100,0,.06));border:1px solid rgba(255,183,0,.25);border-radius:5px;color:var(--gold);cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.new-btn:hover{background:linear-gradient(135deg,rgba(255,183,0,.2),rgba(255,100,0,.1));box-shadow:0 0 16px var(--gold-dim);}
+
+.agents-list{flex:1;overflow-y:auto;padding:10px 10px;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin;scrollbar-color:var(--gold-dim) transparent;}
+.agents-list::-webkit-scrollbar{width:3px;}.agents-list::-webkit-scrollbar-thumb{background:var(--gold-dim);}
+
+.agent-card{padding:10px 12px;border-radius:6px;cursor:pointer;transition:all .2s;border:1px solid var(--border);background:rgba(255,183,0,.02);position:relative;}
+.agent-card:hover{background:rgba(255,183,0,.06);border-color:rgba(255,183,0,.2);}
+.agent-card.selected{background:rgba(255,183,0,.08);border-color:rgba(255,183,0,.3);box-shadow:0 0 12px var(--gold-dim);}
+.agent-card.selected::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--gold),var(--ember));border-radius:2px 0 0 2px;}
+.ac-icon{font-size:18px;margin-bottom:4px;}
+.ac-name{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:3px;}
+.ac-desc{font-size:10px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ac-date{font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(255,183,0,.25);margin-top:5px;letter-spacing:.5px;}
+.ac-del{position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:3px;border:none;background:transparent;color:rgba(255,69,0,.3);cursor:pointer;font-size:11px;display:none;align-items:center;justify-content:center;transition:all .2s;}
+.agent-card:hover .ac-del{display:flex;}
+.ac-del:hover{background:rgba(255,69,0,.15);color:var(--ember);}
+
+/* ── MAIN AREA ── */
 .main{display:flex;flex-direction:column;overflow:hidden;}
-.chat{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:11px;scrollbar-width:thin;scrollbar-color:rgba(255,183,0,.15) transparent;}
-.chat::-webkit-scrollbar{width:3px;}.chat::-webkit-scrollbar-thumb{background:rgba(255,183,0,.15);}
 
-.welc{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;gap:13px;animation:fi .6s ease;}
-@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.worb{width:90px;height:90px;border-radius:50%;background:radial-gradient(circle at 38% 35%,rgba(255,210,70,.18),rgba(255,100,0,.1),transparent 70%);border:1px solid rgba(255,183,0,.15);display:flex;align-items:center;justify-content:center;animation:op 4s ease-in-out infinite;position:relative;}
-@keyframes op{0%,100%{box-shadow:0 0 30px rgba(255,100,0,.12)}50%{box-shadow:0 0 60px rgba(255,140,0,.28)}}
-.worb::before{content:'';position:absolute;inset:-7px;border-radius:50%;border:1px solid rgba(255,183,0,.07);animation:orr 5s linear infinite;}
-@keyframes orr{to{transform:rotate(360deg)}}
-.oi{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--gold);}
-.wt{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--gold);letter-spacing:6px;}
-.ws{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,183,0,.32);letter-spacing:1.5px;line-height:2;}
-.chips{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:4px;}
-.chip{padding:4px 10px;background:rgba(255,183,0,.04);border:1px solid rgba(255,183,0,.12);border-radius:20px;font-size:10px;color:rgba(255,183,0,.5);cursor:pointer;transition:all .2s;}
-.chip:hover{background:rgba(255,183,0,.1);color:var(--gold);border-color:rgba(255,183,0,.3);}
+/* ── HEADER ── */
+.main-header{border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,3,1,.95);flex-shrink:0;position:relative;}
+.main-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),var(--amber),var(--gold),transparent);animation:hl 4s ease-in-out infinite;}
+@keyframes hl{0%,100%{opacity:.25}50%{opacity:.7}}
+.mh-left{display:flex;align-items:center;gap:12px;}
+.agent-indicator{display:flex;align-items:center;gap:8px;}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.ai-name{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--gold);letter-spacing:4px;}
+.ai-status{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,183,0,.45);letter-spacing:1.5px;}
+.mh-right{display:flex;align-items:center;gap:10px;}
+.hdr-stat{font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(255,183,0,.3);text-align:right;line-height:1.8;letter-spacing:.5px;}
+#clock-hdr{font-family:'Orbitron',monospace;font-size:13px;color:var(--gold);letter-spacing:1px;}
 
-.msg{display:flex;gap:9px;animation:mi .28s ease;}
-@keyframes mi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.msg.u{align-self:flex-end;flex-direction:row-reverse;max-width:82%;}
+/* ── CHAT ── */
+.chat-area{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin;scrollbar-color:var(--gold-dim) transparent;}
+.chat-area::-webkit-scrollbar{width:3px;}.chat-area::-webkit-scrollbar-thumb{background:var(--gold-dim);}
+
+/* Welcome */
+.welcome-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;gap:16px;animation:fadeUp .6s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.ws-orb{width:100px;height:100px;border-radius:50%;background:radial-gradient(circle at 38% 35%,rgba(255,200,70,.18),rgba(255,100,0,.1),transparent 70%);border:1px solid rgba(255,183,0,.15);display:flex;align-items:center;justify-content:center;animation:orbP 4s ease-in-out infinite;position:relative;}
+@keyframes orbP{0%,100%{box-shadow:0 0 30px rgba(255,100,0,.1)}50%{box-shadow:0 0 60px rgba(255,140,0,.25)}}
+.ws-orb::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(255,183,0,.06);animation:spin 6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ws-icon{font-size:22px;}
+.ws-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--gold);letter-spacing:5px;}
+.ws-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,183,0,.3);letter-spacing:2px;line-height:2;}
+.ws-chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px;}
+.wc{padding:5px 12px;background:rgba(255,183,0,.04);border:1px solid rgba(255,183,0,.12);border-radius:20px;font-size:10px;color:rgba(255,183,0,.5);cursor:pointer;transition:all .2s;}
+.wc:hover{background:rgba(255,183,0,.1);color:var(--gold);}
+
+/* No agent selected */
+.no-agent{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;gap:12px;}
+.no-agent-icon{font-size:48px;opacity:.2;}
+.no-agent-text{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,183,0,.25);letter-spacing:2px;line-height:2;}
+
+/* Messages */
+.msg{display:flex;gap:10px;animation:msgIn .25s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.msg.u{align-self:flex-end;flex-direction:row-reverse;max-width:80%;}
 .msg.j{align-self:flex-start;max-width:88%;}
-.av{width:28px;height:28px;border-radius:4px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:7px;font-weight:700;}
+.av{width:30px;height:30px;border-radius:4px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:8px;font-weight:700;}
 .av.j{background:rgba(255,183,0,.14);border:1px solid rgba(255,183,0,.2);color:var(--gold);}
 .av.u{background:rgba(255,100,0,.1);border:1px solid rgba(255,140,0,.15);color:var(--amber);}
-.bub{padding:8px 11px;border-radius:5px;font-size:13px;line-height:1.65;position:relative;}
+.bub{padding:9px 13px;border-radius:6px;font-size:13px;line-height:1.65;position:relative;}
 .msg.j .bub{background:rgba(255,183,0,.05);border:1px solid rgba(255,183,0,.11);color:var(--bright);border-top-left-radius:0;}
 .msg.j .bub::before{content:'';position:absolute;top:0;left:-1px;bottom:0;width:2px;background:linear-gradient(180deg,var(--gold),var(--ember));border-radius:1px;}
-.msg.u .bub{background:rgba(255,100,0,.09);border:1px solid rgba(255,140,0,.15);color:var(--bright);border-top-right-radius:0;}
-.ml{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:1.5px;margin-bottom:3px;opacity:.38;}
-.msg.j .ml{color:var(--gold)}.msg.u .ml{color:var(--amber);text-align:right;}
+.msg.u .bub{background:rgba(255,100,0,.09);border:1px solid rgba(255,140,0,.14);color:var(--bright);border-top-right-radius:0;}
+.msg-lbl{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:1.5px;margin-bottom:4px;opacity:.4;}
+.msg.j .msg-lbl{color:var(--gold);}.msg.u .msg-lbl{color:var(--amber);text-align:right;}
 
-.typ{display:none;align-self:flex-start;gap:9px;align-items:center;}
-.typ.on{display:flex;}
-.tdots{display:flex;gap:4px;padding:9px 12px;background:rgba(255,183,0,.04);border:1px solid rgba(255,183,0,.1);border-radius:5px;border-top-left-radius:0;}
-.td{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:tda 1.2s ease-in-out infinite;}
+/* Typing */
+.typing{display:none;align-self:flex-start;gap:10px;align-items:center;}
+.typing.on{display:flex;}
+.tdots{display:flex;gap:4px;padding:10px 13px;background:rgba(255,183,0,.04);border:1px solid rgba(255,183,0,.1);border-radius:6px;border-top-left-radius:0;}
+.td{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:td 1.2s ease-in-out infinite;}
 .td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
-@keyframes tda{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-6px);opacity:1}}
+@keyframes td{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-6px);opacity:1}}
 
-.inz{border-top:1px solid var(--border);padding:11px 16px;display:flex;gap:8px;align-items:center;background:rgba(6,4,1,.96);position:relative;}
-.inz::before{content:'INPUT ▸';position:absolute;left:16px;top:-8px;font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:2px;color:rgba(255,183,0,.35);background:var(--bg);padding:0 4px;}
-#inp{flex:1;background:rgba(255,183,0,.03);border:1px solid rgba(255,183,0,.15);border-radius:5px;padding:9px 12px;color:var(--bright);font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;caret-color:var(--gold);transition:all .25s;}
-#inp::placeholder{color:rgba(255,183,0,.17);}
-#inp:focus{border-color:rgba(255,183,0,.4);box-shadow:0 0 0 1px rgba(255,183,0,.1);}
-#sbtn{width:38px;height:38px;background:rgba(255,183,0,.1);border:1px solid rgba(255,183,0,.2);border-radius:5px;color:var(--gold);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-#sbtn:hover{background:rgba(255,183,0,.2);transform:scale(1.05);}
+/* ── INPUT ZONE ── */
+.input-zone{border-top:1px solid var(--border);padding:12px 20px;display:flex;gap:9px;align-items:center;background:rgba(5,3,1,.97);flex-shrink:0;position:relative;}
+.input-zone::before{content:'INPUT ▸';position:absolute;left:20px;top:-8px;font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:2px;color:rgba(255,183,0,.3);background:var(--bg);padding:0 4px;}
+#vbtn{width:38px;height:38px;border-radius:5px;border:1px solid rgba(255,183,0,.2);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .3s;background:rgba(255,183,0,.06);flex-shrink:0;}
+#vbtn.wake{background:rgba(255,200,0,.12);border-color:rgba(255,200,0,.4);animation:vp 1.5s ease-in-out infinite;}
+#vbtn.listening{background:rgba(255,69,0,.18);border-color:rgba(255,69,0,.5);animation:vp .7s ease-in-out infinite;}
+@keyframes vp{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+#inp{flex:1;background:rgba(255,183,0,.03);border:1px solid rgba(255,183,0,.14);border-radius:5px;padding:10px 13px;color:var(--bright);font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;caret-color:var(--gold);transition:all .25s;}
+#inp::placeholder{color:rgba(255,183,0,.16);}
+#inp:focus{border-color:rgba(255,183,0,.38);box-shadow:0 0 0 1px var(--gold-dim);}
+#sbtn{width:40px;height:40px;background:linear-gradient(135deg,rgba(255,183,0,.14),rgba(255,100,0,.07));border:1px solid var(--gold-dim);border-radius:5px;color:var(--gold);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+#sbtn:hover{background:linear-gradient(135deg,rgba(255,183,0,.24),rgba(255,100,0,.14));transform:scale(1.05);}
 #sbtn:active{transform:scale(.95);}
 #sbtn:disabled{opacity:.3;cursor:not-allowed;transform:none;}
 
-#clock{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:var(--gold);text-align:center;letter-spacing:1.5px;}
-#ddisp{font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(255,183,0,.28);text-align:center;letter-spacing:.5px;margin-top:1px;}
-.wf{display:flex;align-items:center;justify-content:center;gap:2px;height:22px;margin-top:2px;}
-.wb{width:2px;border-radius:1px;background:rgba(255,183,0,.13);height:3px;}
-.wb.on{background:var(--gold);animation:wva 1.2s ease-in-out infinite;}
-@keyframes wva{0%,100%{height:3px}50%{height:15px}}
-#histl{font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(255,183,0,.2);line-height:2;letter-spacing:.5px;}
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:#0a0602;border:1px solid rgba(255,183,0,.25);border-radius:10px;padding:28px;width:480px;max-width:90vw;box-shadow:0 0 60px rgba(255,183,0,.1);}
+.modal-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--gold);letter-spacing:4px;margin-bottom:6px;}
+.modal-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,183,0,.35);letter-spacing:1.5px;margin-bottom:20px;}
+.modal label{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,183,0,.45);letter-spacing:2px;display:block;margin-bottom:6px;margin-top:14px;}
+.modal input,.modal textarea,.modal select{width:100%;background:rgba(255,183,0,.04);border:1px solid rgba(255,183,0,.15);border-radius:5px;padding:10px 12px;color:var(--bright);font-family:'Rajdhani',sans-serif;font-size:13px;outline:none;caret-color:var(--gold);transition:border-color .2s;}
+.modal input:focus,.modal textarea:focus{border-color:rgba(255,183,0,.4);}
+.modal textarea{resize:vertical;min-height:90px;max-height:180px;}
+.modal select{cursor:pointer;}
+.modal select option{background:#0a0602;color:var(--bright);}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:6px;}
+.em-opt{width:34px;height:34px;border-radius:4px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.em-opt:hover,.em-opt.sel{background:rgba(255,183,0,.1);border-color:rgba(255,183,0,.3);}
+.modal-btns{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+.btn-cancel{padding:9px 18px;background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--muted);cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .2s;}
+.btn-cancel:hover{border-color:rgba(255,183,0,.2);color:var(--text);}
+.btn-create{padding:9px 18px;background:linear-gradient(135deg,rgba(255,183,0,.2),rgba(255,100,0,.1));border:1px solid rgba(255,183,0,.35);border-radius:5px;color:var(--gold);cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .2s;}
+.btn-create:hover{background:linear-gradient(135deg,rgba(255,183,0,.3),rgba(255,100,0,.18));box-shadow:0 0 16px var(--gold-dim);}
 
-footer{grid-column:1/-1;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(255,183,0,.22);letter-spacing:1px;background:rgba(6,4,1,.96);}
-.fsegs{display:flex;gap:16px;align-items:center;}
-.fseg{display:flex;align-items:center;gap:4px;}
-.fdot{width:3px;height:3px;border-radius:50%;}
+/* waveform footer */
+.wf{display:flex;align-items:center;gap:2px;height:20px;}
+.wb{width:2px;border-radius:1px;background:rgba(255,183,0,.12);height:3px;}
+.wb.on{background:var(--gold);animation:wva 1.2s ease-in-out infinite;}
+@keyframes wva{0%,100%{height:3px}50%{height:14px}}
 </style>
 </head>
 <body>
 <canvas id="bgc"></canvas>
-<div class="grid"></div><div class="vign"></div><div class="scan"></div>
-<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<div class="grid-ov"></div>
+<div class="vign"></div>
+<div class="scanline"></div>
+<div class="corner tl"></div><div class="corner tr"></div>
+<div class="corner bl"></div><div class="corner br"></div>
 
-<div class="shell">
-<header>
-  <div class="logo">C·L·A·U·D·I·O</div>
-  <div class="hc"><div class="sdot"></div><span id="stxt">SISTEMA ONLINE — AGUARDANDO COMANDO</span></div>
-  <div class="hr">CLAUDE SONNET 4.5<br><span style="opacity:.4">GUI WORKSPACE</span></div>
-</header>
+<div class="app">
 
-<aside class="lp">
-  <div class="pt">◈ SISTEMAS</div>
-  <div class="sr"><span class="sl">NÚCLEO IA</span><span class="sv ok">ONLINE</span></div>
-  <div class="sr"><span class="sl">REDE</span><span class="sv ok">ATIVO</span></div>
-  <div class="sr"><span class="sl">MEMÓRIA</span><span class="sv w" id="memv">—</span></div>
-  <div class="sr"><span class="sl">MENSAGENS</span><span class="sv" id="mc">0</span></div>
-  <div class="pt">◈ PERFORMANCE</div>
-  <div class="bw"><div class="bl2"><span>CPU</span><span id="cpuv">72%</span></div><div class="bar"><div class="bf" id="cpub" style="width:72%"></div></div></div>
-  <div class="bw"><div class="bl2"><span>CONTEXTO</span><span id="ctxv">8%</span></div><div class="bar"><div class="bf" id="ctxb" style="width:8%;background:linear-gradient(90deg,#ff8c00,#ffb700)"></div></div></div>
-  <div class="pt">◈ MODELO</div>
-  <div style="text-align:center"><div class="mbg">claude-sonnet-4</div></div>
-  <div style="margin-top:auto">
-    <div class="pt">◈ PERFIL</div>
-    <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(255,183,0,.3);line-height:2;letter-spacing:.5px;margin-top:3px;">▸ EDITOR DE VÍDEO<br>▸ PROJETO: ARVEN<br>▸ MÚSICA: EMOCIONAL<br>▸ EXP: 3 ANOS</div>
-  </div>
-</aside>
+  <!-- ICON BAR -->
+  <aside class="icon-bar">
+    <div class="icon-logo">NXS</div>
+    <div class="icon-btn active" title="Agentes" onclick="showView('agents')">🤖</div>
+    <div class="icon-btn" title="Chat Global" onclick="showView('global')">💬</div>
+    <div class="icon-sep"></div>
+    <div class="icon-btn" title="Clima" onclick="quickCmd('previsão do tempo em')">🌤</div>
+    <div class="icon-btn" title="Horas" onclick="quickCmd('que horas são')">🕐</div>
+    <div class="icon-btn" title="Data" onclick="quickCmd('que dia é hoje')">📅</div>
+    <div class="icon-sep"></div>
+    <div class="icon-btn" title="Ativar Voz" onclick="toggleWake()" id="icon-mic">🎙</div>
+  </aside>
 
-<main class="main">
-  <div class="chat" id="chat">
-    <div class="welc" id="welc">
-      <div class="worb"><div class="oi">C</div></div>
-      <div class="wt">C·L·A·U·D·I·O</div>
-      <div class="ws">ASSISTENTE PESSOAL DO GUI<br>CLAUDE SONNET — OPERACIONAL<br>DIGA OLÁ OU ESCOLHA UM ATALHO</div>
-      <div class="chips">
-        <div class="chip" onclick="sc('Quais são suas capacidades?')">⚡ Capacidades</div>
-        <div class="chip" onclick="sc('Me ajude com o projeto Arven')">🏗 Arven</div>
-        <div class="chip" onclick="sc('Sugira músicas para vídeo imobiliário emocional')">🎵 Música</div>
-        <div class="chip" onclick="sc('Como otimizar meu workflow de edição?')">🎬 Workflow</div>
+  <!-- AGENT LIST -->
+  <aside class="agent-panel" id="agentPanel">
+    <div class="ap-header">
+      <div class="ap-title">AGENTES</div>
+      <input class="ap-search" placeholder="Procurar agentes..." oninput="filterAgents(this.value)"/>
+      <button class="new-btn" onclick="openModal()">＋ NOVO AGENTE</button>
+    </div>
+    <div class="agents-list" id="agentsList"></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="main-header">
+      <div class="mh-left">
+        <div class="agent-indicator">
+          <div class="ai-dot"></div>
+          <div>
+            <div class="ai-name" id="activeAgentName">N·E·X·U·S</div>
+            <div class="ai-status" id="activeAgentStatus">SELECIONE UM AGENTE</div>
+          </div>
+        </div>
+      </div>
+      <div class="mh-right">
+        <div class="wf" id="wf"></div>
+        <div class="hdr-stat">
+          <div id="clock-hdr">--:--:--</div>
+          <div id="date-hdr" style="font-size:8px;opacity:.5">...</div>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="typ" id="typ">
-    <div class="av j" style="margin-left:16px">CLD</div>
-    <div class="tdots"><div class="td"></div><div class="td"></div><div class="td"></div></div>
-  </div>
-  <div class="inz">
-    <input type="text" id="inp" placeholder="Digite seu comando, Gui..." maxlength="1000"/>
-    <button id="sbtn" onclick="send()">▶</button>
-  </div>
-</main>
 
-<aside class="rp">
-  <div class="pt">◈ TEMPO</div>
-  <div id="clock">--:--:--</div><div id="ddisp">...</div>
-  <div class="pt">◈ SINAL DE VOZ</div>
-  <div class="wf" id="wf"></div>
-  <div class="pt">◈ SESSÃO</div>
-  <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(255,183,0,.32);line-height:2;letter-spacing:.5px;">
-    USER: <span style="color:#ffb700">GUI</span><br>
-    PROJ: <span style="color:#ffcc44">ARVEN</span><br>
-    TOKENS: <span id="tokd" style="color:#ffb700">0</span><br>
-    MSGS: <span id="md2" style="color:#ffb700">0</span>
-  </div>
-  <div class="pt">◈ HISTÓRICO</div>
-  <div id="histl">AGUARDANDO...</div>
-  <div style="margin-top:auto;font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(255,183,0,.2);text-align:center;line-height:2;letter-spacing:.5px;">CLAUDIO v1.0<br>GUI WORKSPACE 2026</div>
-</aside>
+    <div class="chat-area" id="chatArea">
+      <div class="no-agent" id="noAgentMsg">
+        <div class="no-agent-icon">🤖</div>
+        <div class="no-agent-text">SELECIONE UM AGENTE NO PAINEL<br>OU CRIE UM NOVO PARA COMEÇAR</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+          <div class="wc" onclick="openModal()">＋ Criar agente</div>
+          <div class="wc" onclick="loadDefaultAgents()">⚡ Carregar padrões</div>
+        </div>
+      </div>
+    </div>
 
-<footer>
-  <div class="fsegs">
-    <div class="fseg"><div class="fdot" style="background:#ffb700;box-shadow:0 0 5px #ffb700"></div>IA ATIVA</div>
-    <div class="fseg"><div class="fdot" style="background:#ff8c00;box-shadow:0 0 5px #ff8c00"></div>MODO FOGO</div>
-    <div class="fseg"><div class="fdot" style="background:#ff4500;box-shadow:0 0 5px #ff4500"></div>CLAUDE SONNET 4</div>
+    <div class="typing" id="typing">
+      <div class="av j" style="margin-left:20px" id="typingAv">NXS</div>
+      <div class="tdots"><div class="td"></div><div class="td"></div><div class="td"></div></div>
+    </div>
+
+    <div class="input-zone">
+      <button id="vbtn" onclick="toggleWake()" title="Ativar voz por wake word">🎙</button>
+      <input type="text" id="inp" placeholder='Digite ou diga "Nexus" para ativar...' maxlength="1000"/>
+      <button id="sbtn" onclick="send()">▶</button>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL CRIAR AGENTE -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="e=>{if(e.target===this)closeModal()}">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">NOVO AGENTE</div>
+    <div class="modal-sub">CONFIGURE SEU AGENTE DE IA PERSONALIZADO</div>
+
+    <label>ÍCONE</label>
+    <div class="emoji-grid" id="emojiGrid"></div>
+    <input type="hidden" id="agentIcon" value="🤖"/>
+
+    <label>NOME DO AGENTE</label>
+    <input type="text" id="agentName" placeholder="Ex: Roteirista Arven" maxlength="30"/>
+
+    <label>DESCRIÇÃO CURTA</label>
+    <input type="text" id="agentDesc" placeholder="Ex: Cria roteiros para vídeos imobiliários" maxlength="80"/>
+
+    <label>INSTRUÇÕES DO AGENTE (PERSONALIDADE E FUNÇÃO)</label>
+    <textarea id="agentInstr" placeholder="Ex: Você é um roteirista especializado em vídeos imobiliários de alto padrão. Crie roteiros emocionais e cinematográficos focados em lifestyle. Sempre estruture em: abertura emocional, apresentação do espaço, chamada para ação. Use linguagem sofisticada e inspiradora."></textarea>
+
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">CANCELAR</button>
+      <button class="btn-create" onclick="createAgent()">CRIAR AGENTE</button>
+    </div>
   </div>
-  <div id="tokf">TOKENS: 0</div>
-  <div>CLAUDIO v1.0 — GUI — 2026</div>
-</footer>
 </div>
 
 <script>
-const cv=document.getElementById('bgc'),cx=cv.getContext('2d');
+// ══════════════════════════════════════
+// CANVAS FIRE ORB
+// ══════════════════════════════════════
+const cv=document.getElementById('bgc'),ctx=cv.getContext('2d');
 let W,H;
 function rsz(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
 rsz();window.addEventListener('resize',rsz);
@@ -194,14 +286,14 @@ const COLS=['#ff8c00','#ffb700','#ff6000','#ffd040','#ff4500'];
 class P{
   constructor(){this.init(true);}
   init(rnd){
-    const a=Math.random()*Math.PI*2,r=60+Math.random()*150;
-    this.x=W/2+Math.cos(a)*r+(Math.random()-.5)*50;
-    this.y=H/2+Math.sin(a)*r+(Math.random()-.5)*50;
-    this.vx=(Math.random()-.5)*.3;this.vy=(Math.random()-.5)*.3-.2;
+    const a=Math.random()*Math.PI*2,r=50+Math.random()*130;
+    this.x=W/2+Math.cos(a)*r+(Math.random()-.5)*45;
+    this.y=H/2+Math.sin(a)*r+(Math.random()-.5)*45;
+    this.vx=(Math.random()-.5)*.28;this.vy=(Math.random()-.5)*.28-.18;
     this.life=rnd?Math.random():0;this.ml=.5+Math.random()*.9;
-    this.sz=.4+Math.random()*1.6;this.c=COLS[0|Math.random()*COLS.length];
-    this.orb=Math.random()<.4;this.or=55+Math.random()*130;
-    this.os=(.003+Math.random()*.006)*(Math.random()<.5?1:-1);this.oa=Math.random()*Math.PI*2;
+    this.sz=.4+Math.random()*1.5;this.c=COLS[0|Math.random()*COLS.length];
+    this.orb=Math.random()<.4;this.or=40+Math.random()*110;
+    this.os=(.003+Math.random()*.005)*(Math.random()<.5?1:-1);this.oa=Math.random()*Math.PI*2;
   }
   upd(){
     this.life+=.007;
@@ -210,91 +302,373 @@ class P{
     if(this.life>this.ml)this.init(false);
   }
   draw(){
-    cx.globalAlpha=Math.sin((this.life/this.ml)*Math.PI)*.6;
-    cx.beginPath();cx.arc(this.x,this.y,this.sz,0,Math.PI*2);
-    cx.fillStyle=this.c;cx.shadowBlur=8;cx.shadowColor=this.c;cx.fill();cx.shadowBlur=0;
+    ctx.globalAlpha=Math.sin((this.life/this.ml)*Math.PI)*.55;
+    ctx.beginPath();ctx.arc(this.x,this.y,this.sz,0,Math.PI*2);
+    ctx.fillStyle=this.c;ctx.shadowBlur=7;ctx.shadowColor=this.c;ctx.fill();ctx.shadowBlur=0;
   }
 }
-const pts=[];for(let i=0;i<220;i++)pts.push(new P());
-function frame(){
-  requestAnimationFrame(frame);cx.clearRect(0,0,W,H);
-  const g=cx.createRadialGradient(W/2,H/2,0,W/2,H/2,200);
-  g.addColorStop(0,'rgba(255,160,0,.065)');g.addColorStop(.5,'rgba(255,80,0,.025)');g.addColorStop(1,'transparent');
-  cx.globalAlpha=1;cx.fillStyle=g;cx.fillRect(0,0,W,H);
-  cx.globalAlpha=.09;cx.strokeStyle='#ffb700';cx.lineWidth=.4;
-  [60,110,170,215].forEach(r=>{cx.beginPath();cx.arc(W/2,H/2,r,0,Math.PI*2);cx.stroke();});
-  cx.lineWidth=.3;
+const pts=[];for(let i=0;i<180;i++)pts.push(new P());
+function drawBg(){
+  requestAnimationFrame(drawBg);ctx.clearRect(0,0,W,H);
+  const g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,180);
+  g.addColorStop(0,'rgba(255,150,0,.055)');g.addColorStop(.6,'rgba(255,70,0,.02)');g.addColorStop(1,'transparent');
+  ctx.globalAlpha=1;ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.globalAlpha=.08;ctx.strokeStyle='#ffb700';ctx.lineWidth=.38;
+  [45,85,130,170].forEach(r=>{ctx.beginPath();ctx.arc(W/2,H/2,r,0,Math.PI*2);ctx.stroke();});
+  ctx.lineWidth=.28;
   for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
     const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.hypot(dx,dy);
-    if(d<48){cx.globalAlpha=(1-d/48)*.16;cx.strokeStyle='#ffb700';cx.beginPath();cx.moveTo(pts[i].x,pts[i].y);cx.lineTo(pts[j].x,pts[j].y);cx.stroke();}
+    if(d<45){ctx.globalAlpha=(1-d/45)*.14;ctx.strokeStyle='#ffb700';ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.stroke();}
   }
-  pts.forEach(p=>{p.upd();p.draw();});cx.globalAlpha=1;
+  pts.forEach(p=>{p.upd();p.draw();});ctx.globalAlpha=1;
 }
-frame();
+drawBg();
+
+// ── CLOCK ──
 (function tick(){
   const n=new Date(),p=v=>String(v).padStart(2,'0');
-  document.getElementById('clock').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+  document.getElementById('clock-hdr').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
   const D=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'],M=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
-  document.getElementById('ddisp').textContent=`${D[n.getDay()]} ${n.getDate()} ${M[n.getMonth()]} ${n.getFullYear()}`;
+  document.getElementById('date-hdr').textContent=`${D[n.getDay()]} ${n.getDate()} ${M[n.getMonth()]} ${n.getFullYear()}`;
   setTimeout(tick,1000);
 })();
-(function(){const w=document.getElementById('wf');for(let i=0;i<18;i++){const b=document.createElement('div');b.className='wb';b.style.animationDelay=(i*.07)+'s';b.style.animationDuration=(.6+Math.random()*.7)+'s';w.appendChild(b);}})();
+
+// ── WAVEFORM ──
+(function(){const w=document.getElementById('wf');for(let i=0;i<14;i++){const b=document.createElement('div');b.className='wb';b.style.animationDelay=(i*.07)+'s';b.style.animationDuration=(.6+Math.random()*.7)+'s';w.appendChild(b);}})();
 function setWF(on){document.querySelectorAll('.wb').forEach(b=>{b.className='wb'+(on?' on':'');});}
 
-let msgs=[],tokens=0,busy=false;
-function rmW(){const w=document.getElementById('welc');if(w)w.remove();}
-function scrollB(){document.getElementById('chat').scrollTop=9999;}
-function addMsg(role,content){
-  rmW();
+// ── EMOJI GRID ──
+const EMOJIS=['🤖','🎵','🎬','📝','🏗','✈️','💼','🌐','🎨','📊','🔍','⚡','🧠','🎯','💡','🔥','🌟','🎙','📱','🛸','🎭','🏆','💎','🦾'];
+let selEmoji='🤖';
+(function(){
+  const g=document.getElementById('emojiGrid');
+  EMOJIS.forEach(e=>{
+    const d=document.createElement('div');d.className='em-opt'+(e===selEmoji?' sel':'');
+    d.textContent=e;d.onclick=()=>{
+      document.querySelectorAll('.em-opt').forEach(x=>x.classList.remove('sel'));
+      d.classList.add('sel');selEmoji=e;document.getElementById('agentIcon').value=e;
+    };
+    g.appendChild(d);
+  });
+})();
+
+// ══════════════════════════════════════
+// AGENT SYSTEM
+// ══════════════════════════════════════
+let agents=JSON.parse(localStorage.getItem('nexus_agents')||'[]');
+let activeAgent=null;
+let agentChats=JSON.parse(localStorage.getItem('nexus_chats')||'{}');
+let tokens=0,busy=false;
+
+function saveAgents(){localStorage.setItem('nexus_agents',JSON.stringify(agents));}
+function saveChats(){localStorage.setItem('nexus_chats',JSON.stringify(agentChats));}
+
+function loadDefaultAgents(){
+  const defaults=[
+    {id:'music',icon:'🎵',name:'MÚSICA',desc:'Curadoria de trilhas sonoras para vídeos. Sugere músicas por mood, pacing e plataforma.',instr:`Você é um curador musical especialista de Gui. Ele tem licença de música que cobre direitos autorais. Referências: Teddy Swims ("The Door", "Lose Control") — emocional, soul, poderoso. Quando sugerir músicas, SEMPRE pergunte primeiro: 1) Mood do vídeo, 2) Pacing, 3) Público-alvo, 4) Duração, 5) Plataforma. Sugira em bullet points com nome, artista, por que funciona e BPM aproximado. Misture conhecidas com descobertas. Fale em português brasileiro.`,date:'Agente padrão'},
+    {id:'edit',icon:'🎬',name:'EDIÇÃO',desc:'Workflow de edição, técnicas de corte, color grading e otimização de produção.',instr:`Você é um especialista em edição de vídeo para Gui, que usa Premiere Pro, Final Cut Pro e DaVinci Resolve. Foco em: técnicas de corte, sincronização com música, color grading para imóveis, transições cinematográficas, otimização de workflow. Para vídeos imobiliários, priorize: golden hour, lifestyle shots, cortes rítmicos, gradação com tons quentes e sofisticados. Dê dicas práticas e técnicas específicas. Fale em português brasileiro.`,date:'Agente padrão'},
+    {id:'script',icon:'📝',name:'ROTEIRISTA',desc:'Criação de roteiros cinematográficos para vídeos imobiliários e campanhas.',instr:`Você é um roteirista especializado em vídeos imobiliários de alto padrão para Gui. Projeto principal: Arven. Estilo: cinematográfico, emocional, luxury. Estrutura padrão: 1) Abertura emocional (problema/sonho), 2) Apresentação do espaço (lifestyle, não produto), 3) Detalhes premium, 4) Chamada para ação sofisticada. Público: compradores de alto padrão. Tom: aspiracional, exclusivo, emocional. Quando criar roteiro, pergunte: duração, plataforma, público e mensagem principal. Fale em português brasileiro.`,date:'Agente padrão'},
+    {id:'arven',icon:'🏗',name:'ARVEN',desc:'Agente específico para a campanha imobiliária Arven — estratégia, conteúdo e marketing.',instr:`Você é o agente especialista da campanha imobiliária ARVEN. Conhece tudo sobre o projeto: é uma campanha premium, com foco em lifestyle, exclusividade e emoção. Ajude com: estratégia de conteúdo, ideias de vídeo, scripts específicos, sugestão de músicas para o projeto, análise de tendências do mercado imobiliário premium 2026, copy para redes sociais. Tom: sofisticado, exclusivo, aspiracional. Público: compradores de alto padrão. Fale em português brasileiro.`,date:'Agente padrão'},
+  ];
+  defaults.forEach(d=>{if(!agents.find(a=>a.id===d.id))agents.push(d);});
+  saveAgents();renderAgents();
+}
+
+function renderAgents(filter=''){
+  const list=document.getElementById('agentsList');
+  list.innerHTML='';
+  const filtered=agents.filter(a=>a.name.toLowerCase().includes(filter.toLowerCase())||a.desc.toLowerCase().includes(filter.toLowerCase()));
+  if(!filtered.length){
+    list.innerHTML=`<div style="text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,183,0,.2);padding:20px;line-height:2;">NENHUM AGENTE<br>ENCONTRADO</div>`;
+    return;
+  }
+  filtered.forEach(a=>{
+    const d=document.createElement('div');
+    d.className='agent-card'+(activeAgent&&activeAgent.id===a.id?' selected':'');
+    d.innerHTML=`
+      <div class="ac-icon">${a.icon}</div>
+      <div class="ac-name">${a.name}</div>
+      <div class="ac-desc">${a.desc}</div>
+      <div class="ac-date">${a.date}</div>
+      <button class="ac-del" onclick="deleteAgent('${a.id}',event)" title="Deletar">✕</button>
+    `;
+    d.onclick=()=>selectAgent(a);
+    list.appendChild(d);
+  });
+}
+
+function selectAgent(a){
+  activeAgent=a;
+  document.getElementById('activeAgentName').textContent=a.name;
+  document.getElementById('activeAgentStatus').textContent=a.desc.slice(0,40)+'...';
+  document.getElementById('typingAv').textContent=a.icon;
+  document.getElementById('inp').placeholder=`Fale com ${a.name} ou diga "Nexus"...`;
+  renderAgents();
+  renderChat();
+}
+
+function deleteAgent(id,e){
+  e.stopPropagation();
+  if(!confirm('Deletar este agente?'))return;
+  agents=agents.filter(a=>a.id!==id);
+  delete agentChats[id];
+  saveAgents();saveChats();
+  if(activeAgent&&activeAgent.id===id){activeAgent=null;showNoAgent();}
+  renderAgents();
+}
+
+function filterAgents(v){renderAgents(v);}
+
+function showNoAgent(){
+  document.getElementById('activeAgentName').textContent='N·E·X·U·S';
+  document.getElementById('activeAgentStatus').textContent='SELECIONE UM AGENTE';
+  document.getElementById('inp').placeholder='Digite ou diga "Nexus" para ativar...';
+  const ca=document.getElementById('chatArea');ca.innerHTML='';
+  const no=document.createElement('div');no.className='no-agent';no.id='noAgentMsg';
+  no.innerHTML=`<div class="no-agent-icon">🤖</div><div class="no-agent-text">SELECIONE UM AGENTE NO PAINEL<br>OU CRIE UM NOVO PARA COMEÇAR</div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px"><div class="wc" onclick="openModal()">＋ Criar agente</div><div class="wc" onclick="loadDefaultAgents()">⚡ Carregar padrões</div></div>`;
+  ca.appendChild(no);
+}
+
+// ── MODAL ──
+function openModal(){
+  document.getElementById('modal').style.display='flex';
+  document.getElementById('agentName').value='';
+  document.getElementById('agentDesc').value='';
+  document.getElementById('agentInstr').value='';
+  selEmoji='🤖';
+  document.querySelectorAll('.em-opt').forEach((x,i)=>{x.className='em-opt'+(EMOJIS[i]===selEmoji?' sel':'');});
+  document.getElementById('agentIcon').value='🤖';
+  setTimeout(()=>document.getElementById('agentName').focus(),100);
+}
+
+function closeModal(){document.getElementById('modal').style.display='none';}
+
+function createAgent(){
+  const name=document.getElementById('agentName').value.trim();
+  const desc=document.getElementById('agentDesc').value.trim();
+  const instr=document.getElementById('agentInstr').value.trim();
+  const icon=document.getElementById('agentIcon').value||selEmoji;
+  if(!name){alert('Dê um nome ao agente!');return;}
+  if(!instr){alert('Adicione instruções para o agente!');return;}
+  const now=new Date();
+  const M=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const agent={
+    id:'agent_'+Date.now(),
+    icon,name:name.toUpperCase(),
+    desc:desc||'Agente personalizado',
+    instr,
+    date:`Criado ${now.getDate()} ${M[now.getMonth()]} ${now.getFullYear()}`
+  };
+  agents.unshift(agent);
+  saveAgents();renderAgents();closeModal();selectAgent(agent);
+}
+
+// ── CHAT RENDER ──
+function renderChat(){
+  const ca=document.getElementById('chatArea');ca.innerHTML='';
+  const hist=agentChats[activeAgent.id]||[];
+  if(!hist.length){
+    const w=document.createElement('div');w.className='welcome-screen';
+    w.innerHTML=`
+      <div class="ws-orb"><div class="ws-icon">${activeAgent.icon}</div></div>
+      <div class="ws-title">${activeAgent.name}</div>
+      <div class="ws-sub">${activeAgent.desc}<br>DIGA "NEXUS" OU ESCREVA SEU COMANDO</div>
+      <div class="ws-chips">
+        <div class="wc" onclick="sc('O que você pode fazer?')">⚡ Capacidades</div>
+        <div class="wc" onclick="sc('Me ajude com uma ideia')">💡 Ideia</div>
+        <div class="wc" onclick="sc('Que horas são?')">🕐 Horas</div>
+        <div class="wc" onclick="sc('Previsão do tempo em Porto Alegre')">🌤 Clima</div>
+      </div>
+    `;
+    ca.appendChild(w);
+    return;
+  }
+  hist.forEach(m=>_addMsgEl(m.role,m.content));
+  ca.scrollTop=9999;
+}
+
+function _addMsgEl(role,content){
+  const ca=document.getElementById('chatArea');
+  // remove welcome
+  const w=ca.querySelector('.welcome-screen,.no-agent');if(w)w.remove();
   const isJ=role==='assistant';
-  const w=document.createElement('div');w.className='msg '+(isJ?'j':'u');
-  const av=document.createElement('div');av.className='av '+(isJ?'j':'u');av.textContent=isJ?'CLD':'GUI';
+  const wrap=document.createElement('div');wrap.className='msg '+(isJ?'j':'u');
+  const av=document.createElement('div');av.className='av '+(isJ?'j':'u');
+  av.textContent=isJ?(activeAgent?.icon||'NXS'):'GUI';
   const bub=document.createElement('div');bub.className='bub';
-  const lbl=document.createElement('div');lbl.className='ml';lbl.textContent=isJ?'CLAUDIO':'GUI';
+  const lbl=document.createElement('div');lbl.className='msg-lbl';lbl.textContent=isJ?(activeAgent?.name||'NEXUS'):'GUI';
   const txt=document.createElement('div');
   txt.innerHTML=content.replace(/\*\*(.*?)\*\*/g,'<strong style="color:#ffe8b0">$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');
-  bub.appendChild(lbl);bub.appendChild(txt);w.appendChild(av);w.appendChild(bub);
-  document.getElementById('chat').appendChild(w);scrollB();
-  if(!isJ){const h=document.getElementById('histl');h.innerHTML='▸ '+content.slice(0,18)+'...<br>'+h.innerHTML;}
+  bub.appendChild(lbl);bub.appendChild(txt);wrap.appendChild(av);wrap.appendChild(bub);
+  ca.appendChild(wrap);ca.scrollTop=9999;
 }
-function setTyp(on){document.getElementById('typ').className='typ'+(on?' on':'');setWF(on);if(on)scrollB();}
-function updStats(){
-  const ctx=Math.min(98,Math.max(8,(msgs.length/20)*100|0));
-  document.getElementById('ctxv').textContent=ctx+'%';document.getElementById('ctxb').style.width=ctx+'%';
-  document.getElementById('mc').textContent=msgs.length;document.getElementById('md2').textContent=msgs.length;
-  document.getElementById('tokd').textContent=tokens.toLocaleString();document.getElementById('tokf').textContent='TOKENS: '+tokens.toLocaleString();
-  document.getElementById('memv').textContent=msgs.length>0?'ATIVO':'—';
-  document.getElementById('memv').style.color=msgs.length>0?'#ffcc44':'#ff8c00';
+
+function addMsg(role,content){
+  if(!agentChats[activeAgent.id])agentChats[activeAgent.id]=[];
+  agentChats[activeAgent.id].push({role,content});
+  saveChats();_addMsgEl(role,content);
 }
+
+function setTyp(on){document.getElementById('typing').className='typing'+(on?' on':'');setWF(on);if(on)document.getElementById('chatArea').scrollTop=9999;}
+
+// ══════════════════════════════════════
+// VOICE
+// ══════════════════════════════════════
+let vstate='off',wakeRecog=null,cmdRecog=null,isSpeaking=false;
+const vstateRef={current:'off'};
+const WAKES=['nexus','ei nexus','oi nexus','hey nexus','ok nexus'];
+
+function setVUI(s){
+  vstate=s;vstateRef.current=s;
+  const b=document.getElementById('vbtn');
+  const im=document.getElementById('icon-mic');
+  if(s==='off'){b.className='';b.style.cssText='';b.textContent='🎙';im.textContent='🎙';setWF(false);}
+  else if(s==='wake'){b.className='wake';b.textContent='👂';im.textContent='👂';}
+  else if(s==='cmd'){b.className='listening';b.textContent='🔴';im.textContent='🔴';setWF(true);}
+  else if(s==='proc'){b.className='';b.textContent='⚙️';im.textContent='⚙️';setWF(false);}
+}
+
+function beep(){
+  try{const ac=new(window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sine';o.frequency.setValueAtTime(880,ac.currentTime);o.frequency.exponentialRampToValueAtTime(440,ac.currentTime+.16);g.gain.setValueAtTime(.22,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2);o.start();o.stop(ac.currentTime+.22);}catch(e){}
+}
+
+function speak(text,cb){
+  if(!window.speechSynthesis){if(cb)cb();return;}
+  window.speechSynthesis.cancel();
+  const plain=text.replace(/\*\*(.*?)\*\*/g,'$1').replace(/\*(.*?)\*/g,'$1').replace(/[▸►#\n]/g,' ').slice(0,380);
+  const u=new SpeechSynthesisUtterance(plain);u.lang='pt-BR';u.rate=1.05;u.pitch=.88;
+  isSpeaking=true;
+  const done=()=>{isSpeaking=false;if(cb)cb();if(vstateRef.current!=='off')resumeWake();};
+  u.onend=done;u.onerror=done;window.speechSynthesis.speak(u);
+}
+
+function toggleWake(){
+  if(vstate==='off'){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){alert('Use Google Chrome para reconhecimento de voz!');return;}
+    startWake();
+    setTimeout(()=>speak('Sistema de voz ativo. Me chame pelo nome quando precisar.'),300);
+  } else {
+    try{wakeRecog&&wakeRecog.abort();}catch(e){}
+    try{cmdRecog&&cmdRecog.abort();}catch(e){}
+    window.speechSynthesis&&window.speechSynthesis.cancel();
+    isSpeaking=false;setVUI('off');
+  }
+}
+
+function startWake(){
+  setVUI('wake');_listenWake();
+}
+function _listenWake(){
+  if(vstateRef.current!=='wake'||isSpeaking)return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  wakeRecog=new SR();wakeRecog.lang='pt-BR';wakeRecog.continuous=false;wakeRecog.interimResults=false;wakeRecog.maxAlternatives=5;
+  wakeRecog.onresult=(e)=>{
+    if(vstateRef.current!=='wake')return;
+    const alts=Array.from(e.results[0]).map(a=>a.transcript.toLowerCase().trim());
+    if(alts.some(t=>WAKES.some(w=>t.includes(w)))){onWake();}else{resumeWake();}
+  };
+  wakeRecog.onerror=(e)=>{if(vstateRef.current==='wake'&&e.error!=='aborted')setTimeout(resumeWake,500);};
+  wakeRecog.onend=()=>{if(vstateRef.current==='wake')resumeWake();};
+  try{wakeRecog.start();}catch(e){setTimeout(resumeWake,400);}
+}
+function resumeWake(){if(vstateRef.current!=='wake'||isSpeaking)return;try{wakeRecog&&wakeRecog.abort();}catch(e){}setTimeout(()=>{if(vstateRef.current==='wake')_listenWake();},250);}
+function onWake(){setVUI('cmd');beep();setTimeout(startCmd,400);}
+function startCmd(){
+  if(vstateRef.current!=='cmd')return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;
+  let got=false;
+  cmdRecog=new SR();cmdRecog.lang='pt-BR';cmdRecog.continuous=false;cmdRecog.interimResults=false;cmdRecog.maxAlternatives=3;
+  cmdRecog.onresult=(e)=>{got=true;const t=e.results[0][0].transcript.trim();if(t.length<2){setVUI('wake');resumeWake();return;}document.getElementById('inp').value=t;setVUI('proc');send();};
+  cmdRecog.onerror=()=>{if(!got){setVUI('wake');resumeWake();}};
+  cmdRecog.onend=()=>{if(!got){setVUI('wake');resumeWake();}};
+  try{cmdRecog.start();}catch(e){setVUI('wake');resumeWake();}
+}
+
+// ══════════════════════════════════════
+// SEND
+// ══════════════════════════════════════
 async function send(){
   if(busy)return;
   const el=document.getElementById('inp'),text=el.value.trim();
   if(!text)return;
   el.value='';busy=true;document.getElementById('sbtn').disabled=true;
-  msgs.push({role:'user',content:text});
+
+  // Se não tem agente selecionado, seleciona o global
+  if(!activeAgent){
+    alert('Selecione um agente primeiro ou crie um novo!');
+    busy=false;document.getElementById('sbtn').disabled=false;return;
+  }
+
+  // ── HORAS ──
+  if(/que horas|horas são|hora certa/i.test(text)){
+    const n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0');
+    const reply=`São ${h}h${m}, Gui.`;
+    addMsg('user',text);addMsg('assistant',reply);
+    busy=false;document.getElementById('sbtn').disabled=false;el.focus();
+    if(vstate!=='off')speak(reply);return;
+  }
+
+  // ── DATA ──
+  if(/que dia|data de hoje|dia é hoje/i.test(text)){
+    const n=new Date();
+    const D=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+    const M=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    const reply=`Hoje é ${D[n.getDay()]}, ${n.getDate()} de ${M[n.getMonth()]} de ${n.getFullYear()}.`;
+    addMsg('user',text);addMsg('assistant',reply);
+    busy=false;document.getElementById('sbtn').disabled=false;el.focus();
+    if(vstate!=='off')speak(reply);return;
+  }
+
+  // ── CLIMA ──
+  const wm=text.match(/(?:previsão|tempo|clima).*?(?:em|de|para|na?)\s+([a-zA-ZÀ-ú\s]+?)(?:\?|$)/i);
+  if(wm||/previsão do tempo|como está o tempo|vai chover|temperatura/i.test(text)){
+    let city=(wm&&wm[1])||'';city=city.trim()||'São Paulo';
+    addMsg('user',text);setTyp(true);
+    try{
+      const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[],command:{type:'weather',city}})});
+      const d=await r.json();
+      const reply=d.content[0].text;
+      setTyp(false);addMsg('assistant',reply);
+      if(vstate!=='off')speak(reply);
+    }catch(e){setTyp(false);addMsg('assistant','Erro ao consultar clima.');}
+    busy=false;document.getElementById('sbtn').disabled=false;el.focus();return;
+  }
+
+  // ── IA com personalidade do agente ──
   addMsg('user',text);setTyp(true);
-  document.getElementById('stxt').textContent='PROCESSANDO...';
+  const hist=agentChats[activeAgent.id]||[];
   try{
     const r=await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({messages:msgs.slice(-16)})
+      body:JSON.stringify({
+        messages:hist.slice(-20),
+        agentInstr:activeAgent.instr
+      })
     });
     const d=await r.json();
     if(d.error)throw new Error(d.error.message);
     const reply=d.content[0].text;
     tokens+=(d.usage?.input_tokens||0)+(d.usage?.output_tokens||0);
-    msgs.push({role:'assistant',content:reply});
     setTyp(false);addMsg('assistant',reply);
-    document.getElementById('stxt').textContent='SISTEMA ONLINE — AGUARDANDO COMANDO';
+    if(vstate!=='off'){speak(reply);}
   }catch(e){
-    setTyp(false);addMsg('assistant','⚠️ Erro: '+e.message);
-    document.getElementById('stxt').textContent='ERRO — VERIFIQUE CONEXÃO';
+    setTyp(false);addMsg('assistant','Erro: '+e.message);
+    if(vstate!=='off')setVUI('wake');
   }
-  updStats();busy=false;document.getElementById('sbtn').disabled=false;el.focus();
+  busy=false;document.getElementById('sbtn').disabled=false;el.focus();
 }
+
 function sc(t){document.getElementById('inp').value=t;send();}
+function quickCmd(t){document.getElementById('inp').value=t;if(activeAgent)send();else alert('Selecione um agente primeiro!');}
+function showView(v){}
+
 document.getElementById('inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ── INIT ──
+if(agents.length===0){loadDefaultAgents();}else{renderAgents();}
 </script>
 </body>
 </html>
