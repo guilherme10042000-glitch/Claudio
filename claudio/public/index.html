@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXUS</title>
+<title>NEXUS AI</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap');
 :root{
@@ -194,6 +194,15 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
 .bk{padding:7px 15px;background:rgba(0,170,255,.08);border:1px solid rgba(0,170,255,.25);border-radius:4px;color:var(--blue);cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;}
 .bk:hover{background:rgba(0,170,255,.15);}
 
+/* MEMORY */
+.mem-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.15);border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(0,255,136,.6);letter-spacing:1px;margin-bottom:5px;}
+.mem-section{padding:8px 14px;border-top:1px solid var(--border);background:rgba(0,0,0,.2);}
+.mem-title{font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(0,255,136,.4);letter-spacing:2px;margin-bottom:6px;}
+.mem-item{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:4px;margin-bottom:3px;font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(0,200,100,.6);}
+.mem-del{cursor:pointer;color:rgba(255,50,50,.4);font-size:10px;}
+.mem-del:hover{color:rgba(255,50,50,.7);}
+.web-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:rgba(0,170,255,.05);border:1px solid rgba(0,170,255,.15);border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(0,170,255,.5);letter-spacing:1px;margin-bottom:5px;}
+
 /* EDIT MESSAGE */
 .edit-area{width:100%;background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.2);border-radius:5px;padding:7px 10px;color:var(--bright);font-family:'Rajdhani',sans-serif;font-size:13px;outline:none;caret-color:var(--blue);resize:vertical;min-height:50px;margin-top:4px;}
 .edit-btns{display:flex;gap:5px;margin-top:5px;justify-content:flex-end;}
@@ -209,7 +218,7 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
 <div class="app">
   <aside class="sidebar">
     <div class="sb-logo-area">
-      <div class="sb-logo">NEXUS</div>
+      <div class="sb-logo">NEXUS<span style="font-size:9px;color:rgba(0,170,255,.5);letter-spacing:3px;margin-left:3px">AI</span></div>
       <div class="sb-sub">SEGUNDO CEREBRO ARTIFICIAL</div>
     </div>
     <div class="tabs">
@@ -242,7 +251,7 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <div class="mh-actions" id="mhActions" style="display:none">
-          <button class="mh-btn" onclick="clearChat()">LIMPAR</button>
+          <button class="mh-btn" onclick="openMemModal()">MEMORIA</button><button class="mh-btn" onclick="clearChat()">LIMPAR</button>
           <button class="mh-btn" onclick="exportChat()">EXPORTAR</button>
           <button class="mh-btn" onclick="regenerateLast()">REGENERAR</button>
         </div>
@@ -273,6 +282,21 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
       </div>
     </div>
   </main>
+</div>
+
+<!-- MODAL MEMORIA -->
+<div class="mo" id="memModal" style="display:none">
+  <div class="mb">
+    <div class="mt">MEMORIA</div>
+    <div class="ms">INFORMACOES QUE O NEXUS LEMBRA SOBRE VOCE</div>
+    <div id="memList" style="margin-bottom:12px;max-height:200px;overflow-y:auto;"></div>
+    <label>ADICIONAR MEMORIA</label>
+    <input type="text" id="memInput" placeholder="Ex: Gui e editor de video com 3 anos de experiencia..." maxlength="200"/>
+    <div class="mbtns">
+      <button class="bc" onclick="closeMemModal()">FECHAR</button>
+      <button class="bk" onclick="addMemory()">SALVAR</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL AGENTE -->
@@ -434,7 +458,7 @@ function selectFreeChat(id){
 function delFreeChat(id,e){e.stopPropagation();if(!confirm('Deletar conversa?'))return;freeChats=freeChats.filter(c=>c.id!==id);saveAll();if(activeFreeChatId===id){activeFreeChatId=null;currentMode='none';showWelcome();document.getElementById('mhActions').style.display='none';}renderFreeChats();}
 
 function resetHeader(){
-  document.getElementById('mhName').textContent='N·E·X·U·S';
+  document.getElementById('mhName').textContent='NEXUS AI';
   document.getElementById('mhStatus').textContent='SEGUNDO CEREBRO ARTIFICIAL';
   document.getElementById('typAv').textContent='NXS';
   document.getElementById('inp').placeholder='Digite seu pensamento...';
@@ -519,7 +543,7 @@ function renderChatArea(){
 function showWelcome(){
   const ca=document.getElementById('chatArea');ca.innerHTML='';
   const w=document.createElement('div');w.className='welcome';
-  w.innerHTML=`<canvas id="bc2"></canvas><div class="w-title">NEXUS</div><div class="w-sub">SEGUNDO CEREBRO ARTIFICIAL<br>SELECIONE UM AGENTE OU INICIE UM CHAT</div><div class="qcs"><div class="qc" onclick="sc('Que horas sao?')">HORAS</div><div class="qc" onclick="sc('Que dia e hoje?')">DATA</div><div class="qc" onclick="askCity()">CLIMA</div><div class="qc" onclick="sc('Como posso me tornar mais produtivo?')">PRODUTIVIDADE</div></div>`;
+  w.innerHTML=`<canvas id="bc2"></canvas><div class="w-title">NEXUS AI</div><div class="w-sub">SEGUNDO CEREBRO ARTIFICIAL<br>SELECIONE UM AGENTE OU INICIE UM CHAT</div><div class="qcs"><div class="qc" onclick="sc('Que horas sao?')">HORAS</div><div class="qc" onclick="sc('Que dia e hoje?')">DATA</div><div class="qc" onclick="askCity()">CLIMA</div><div class="qc" onclick="sc('Como posso me tornar mais produtivo?')">PRODUTIVIDADE</div></div>`;
   ca.appendChild(w);setTimeout(()=>drawBrain('bc2',150),50);
 }
 
@@ -760,6 +784,63 @@ function setMicUI(s){
 
 function setVst(msg,col){const el=document.getElementById('vst');el.textContent=msg;el.style.color=col||'rgba(0,170,255,.2)';}
 
+// MEMORY SYSTEM
+let memories = JSON.parse(localStorage.getItem('nx_memory') || '[]');
+function saveMemory(){localStorage.setItem('nx_memory',JSON.stringify(memories));}
+
+function openMemModal(){
+  document.getElementById('memModal').style.display='flex';
+  renderMemList();
+}
+function closeMemModal(){document.getElementById('memModal').style.display='none';}
+
+function renderMemList(){
+  const el=document.getElementById('memList');
+  if(!memories.length){el.innerHTML='<div style="font-family:Share Tech Mono,monospace;font-size:8px;color:rgba(0,255,136,.25);text-align:center;padding:12px">NENHUMA MEMORIA SALVA</div>';return;}
+  el.innerHTML=memories.map((m,i)=>`<div class="mem-item"><span>${m.slice(0,60)}${m.length>60?'...':''}</span><span class="mem-del" onclick="delMemory(${i})">x</span></div>`).join('');
+}
+
+function addMemory(){
+  const v=document.getElementById('memInput').value.trim();
+  if(!v)return;
+  memories.unshift(v);
+  if(memories.length>30)memories=memories.slice(0,30);
+  saveMemory();renderMemList();
+  document.getElementById('memInput').value='';
+}
+
+function delMemory(i){memories.splice(i,1);saveMemory();renderMemList();}
+
+function getMemoryContext(){
+  if(!memories.length)return'';
+  return'\n\nMEMORIAS SOBRE O USUARIO:\n'+memories.map(m=>'- '+m).join('\n');
+}
+
+// Auto-extract memory from conversation
+function autoExtractMemory(userMsg){
+  const patterns=[
+    /meu nome e ([A-Za-z]+)/i,
+    /eu (trabalho|sou|moro|tenho)/i,
+    /minha? (empresa|projeto|cliente)/i,
+  ];
+  // Just flag for potential memory — don't auto-add to keep control
+}
+
+// WEB SEARCH via API
+async function webSearch(query){
+  try{
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:[],command:{type:'search',query}})});
+    const d=await r.json();
+    return d.content?.[0]?.text||null;
+  }catch(e){return null;}
+}
+
+function needsWebSearch(text){
+  return /hoje|agora|atual|recente|ultimo|noticias|preco|cotacao|tempo|clima|quando foi|quem e|2024|2025|2026/i.test(text)
+    && !/que horas|que dia|previsao/i.test(text);
+}
+
 // SEND
 async function send(){
   if(busy)return;
@@ -823,14 +904,27 @@ async function send(){
 
   // AI
   pushMsg('user',fullMsg);setTyp(true);setVst('PROCESSANDO...','#0088ff');
-  const sysPrompt=activeAgent?activeAgent.instr:`Voce e NEXUS, um assistente de IA pessoal sofisticado e inteligente de Gui, editor de video profissional. Responda em portugues brasileiro. Seja direto, preciso e util. Use markdown para formatar respostas longas.`;
+
+  // Web search if needed
+  let searchResult='';
+  if(needsWebSearch(text)){
+    setVst('BUSCANDO NA WEB...','#00aaff');
+    const sr=await webSearch(text);
+    if(sr)searchResult='\n\n[RESULTADO DE BUSCA NA WEB]:\n'+sr;
+  }
+
+  const memCtx=getMemoryContext();
+  const baseInstr=activeAgent?activeAgent.instr:`Voce e NEXUS AI, um assistente de IA pessoal sofisticado e inteligente de Gui, editor de video profissional. Responda em portugues brasileiro. Seja direto, preciso e util. Use markdown para formatar respostas longas com titulos, listas e codigo quando necessario.`;
+  const sysPrompt=baseInstr+memCtx;
   const hist=getMsgs().slice(-20);
 
   try{
-    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hist,agentInstr:sysPrompt})});
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hist,agentInstr:sysPrompt,searchResult})});
     const d=await r.json();if(d.error)throw new Error(d.error.message);
     const rep=d.content[0].text;
-    setTyp(false);pushMsg('assistant',rep);
+    setTyp(false);
+    const finalRep=(searchResult?'<div class="web-badge">NEXUS WEB</div>\n':'')+rep;
+    pushMsg('assistant',rep);
     if(fromVoice)speak(rep,()=>{if(wakeActive){setMicUI('wake');setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.55)');}});
     else{if(wakeActive){setMicUI('wake');setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.55)');}else setVst('MICROFONE INATIVO — CLIQUE EM MIC PARA ATIVAR','rgba(0,170,255,.2)');}
   }catch(e){
