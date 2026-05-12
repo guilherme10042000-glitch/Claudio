@@ -63,7 +63,18 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
 .item-del{position:absolute;top:6px;right:6px;width:16px;height:16px;border:none;background:transparent;color:rgba(0,170,255,.18);cursor:pointer;font-size:10px;display:none;align-items:center;justify-content:center;}
 .agent-item:hover .item-del,.chat-item:hover .item-del{display:flex;}
 .item-del:hover{color:rgba(255,50,50,.6);}
-.empty-st{font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(0,170,255,.16);text-align:center;padding:20px 10px;line-height:2.2;letter-spacing:1px;}
+.sb-new-chat{display:flex;align-items:center;gap:9px;padding:9px 14px;margin:6px 10px;border-radius:6px;cursor:pointer;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:500;border:1px solid rgba(0,170,255,.12);background:rgba(0,170,255,.04);transition:all .2s;letter-spacing:.3px;}
+.sb-new-chat:hover{background:rgba(0,170,255,.1);color:var(--blue);border-color:rgba(0,170,255,.25);}
+.sb-nav-item{display:flex;align-items:center;gap:10px;padding:7px 14px;cursor:pointer;color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:500;transition:all .2s;border-radius:5px;margin:1px 8px;letter-spacing:.3px;}
+.sb-nav-item:hover{background:var(--blue-dim);color:var(--text);}
+.sb-nav-active{color:var(--blue) !important;background:rgba(0,170,255,.07) !important;}
+.sb-nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0;opacity:.7;}
+.sb-section-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(0,170,255,.28);padding:10px 14px 5px;text-transform:uppercase;}
+.sb-divider{height:1px;background:var(--border);margin:6px 12px;}
+.ap-search{width:100%;background:rgba(0,170,255,.03);border:1px solid rgba(0,170,255,.11);border-radius:4px;padding:7px 10px;color:var(--bright);font-family:'Rajdhani',sans-serif;font-size:12px;outline:none;caret-color:var(--blue);}
+.ap-search::placeholder{color:rgba(0,170,255,.2);}
+
+.empty-st{font-family:'Share Tech Mono',monospace;Share Tech Mono',monospace;font-size:8px;color:rgba(0,170,255,.16);text-align:center;padding:20px 10px;line-height:2.2;letter-spacing:1px;}
 
 /* MAIN */
 .main{display:flex;flex-direction:column;overflow:hidden;}
@@ -217,27 +228,74 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
 
 <div class="app">
   <aside class="sidebar">
+    <!-- LOGO -->
     <div class="sb-logo-area">
-      <div class="sb-logo">NEXUS<span style="font-size:9px;color:rgba(0,170,255,.5);letter-spacing:3px;margin-left:3px">AI</span></div>
-      <div class="sb-sub">SEGUNDO CEREBRO ARTIFICIAL</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="sb-logo">NEXUS<span style="font-size:9px;color:rgba(0,170,255,.5);letter-spacing:3px;margin-left:3px">AI</span></div>
+        <div style="width:28px;height:28px;border-radius:50%;background:rgba(0,170,255,.12);border:1px solid rgba(0,170,255,.2);display:flex;align-items:center;justify-content:center;font-family:Share Tech Mono,monospace;font-size:9px;color:var(--blue);cursor:pointer;flex-shrink:0;">G</div>
+      </div>
     </div>
-    <div class="tabs">
-      <div class="tab active" id="tabA" onclick="switchTab('agents')">AGENTES</div>
-      <div class="tab" id="tabC" onclick="switchTab('chats')">CHATS</div>
+
+    <!-- NEW CHAT -->
+    <div class="sb-new-chat" onclick="newFreeChat()">
+      <span style="font-size:16px;line-height:1">+</span>
+      <span>Novo bate-papo</span>
     </div>
-    <!-- AGENTS PANEL -->
-    <div class="tab-panel active" id="panelA">
-      <button class="new-btn" onclick="openModal()">+ NOVO AGENTE</button>
-      <div class="scroll-list" id="agentsList"></div>
+
+    <!-- SEARCH -->
+    <div class="sb-nav-item" onclick="openSearch()">
+      <span class="sb-nav-icon">&#9906;</span>
+      <span>Procurar</span>
     </div>
+
+    <!-- NAV ITEMS -->
+    <div class="sb-nav-item sb-nav-active" id="navConversas" onclick="switchTab('chats');setNavActive('navConversas')">
+      <span class="sb-nav-icon">&#9741;</span>
+      <span>Conversas</span>
+    </div>
+    <div class="sb-nav-item" id="navProjetos" onclick="switchTab('agents');setNavActive('navProjetos')">
+      <span class="sb-nav-icon">&#9783;</span>
+      <span>Projetos</span>
+    </div>
+    <div class="sb-nav-item" id="navArtefatos" onclick="openArtefatos()">
+      <span class="sb-nav-icon">&#10070;</span>
+      <span>Artefatos</span>
+    </div>
+    <div class="sb-nav-item" id="navCodigo" onclick="openCodigo()">
+      <span class="sb-nav-icon">&#60;/&#62;</span>
+      <span>Código</span>
+    </div>
+    <div class="sb-nav-item" id="navPersonalizar" onclick="openMemModal()">
+      <span class="sb-nav-icon">&#9881;</span>
+      <span>Personalizar</span>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <!-- PANELS -->
     <!-- CHATS PANEL -->
-    <div class="tab-panel" id="panelC">
-      <button class="new-btn" onclick="newFreeChat()">+ NOVO CHAT</button>
+    <div class="tab-panel active" id="panelC" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="sb-section-label">Recentes</div>
       <div class="scroll-list" id="chatsList">
-        <div class="hist-label">HISTORICO DE CONVERSAS</div>
         <div id="chatsItems"></div>
       </div>
     </div>
+
+    <!-- AGENTS PANEL -->
+    <div class="tab-panel" id="panelA" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="sb-section-label">Projetos</div>
+      <button class="new-btn" style="margin:0 10px 8px" onclick="openModal()">+ Novo projeto</button>
+      <div class="scroll-list" id="agentsList"></div>
+    </div>
+
+    <!-- SEARCH PANEL -->
+    <div class="tab-panel" id="panelSearch" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div style="padding:8px 12px;">
+        <input id="searchInput" class="ap-search" placeholder="Pesquisar conversas..." oninput="searchChats(this.value)" style="width:100%"/>
+      </div>
+      <div class="scroll-list" id="searchResults"></div>
+    </div>
+
   </aside>
 
   <main class="main">
@@ -394,12 +452,63 @@ function saveAll(){
   localStorage.setItem('nx_free_chats',JSON.stringify(freeChats));
 }
 
+// NAV
+function setNavActive(id){
+  document.querySelectorAll('.sb-nav-item').forEach(el=>el.classList.remove('sb-nav-active'));
+  const el=document.getElementById(id);if(el)el.classList.add('sb-nav-active');
+}
+
+function openSearch(){
+  document.getElementById('panelC').className='tab-panel';
+  document.getElementById('panelA').className='tab-panel';
+  document.getElementById('panelSearch').className='tab-panel active';
+  setNavActive(null);
+  setTimeout(()=>document.getElementById('searchInput')?.focus(),100);
+}
+
+function searchChats(query){
+  const res=document.getElementById('searchResults');res.innerHTML='';
+  if(!query.trim()){res.innerHTML='<div class="empty-st" style="padding:12px">DIGITE PARA PESQUISAR</div>';return;}
+  const q=query.toLowerCase();
+  const matches=freeChats.filter(c=>
+    c.title.toLowerCase().includes(q)||
+    c.messages.some(m=>m.content.toLowerCase().includes(q))
+  );
+  if(!matches.length){res.innerHTML='<div class="empty-st" style="padding:12px">NENHUM RESULTADO</div>';return;}
+  matches.forEach(c=>{
+    const d=document.createElement('div');d.className='chat-item';
+    d.innerHTML=`<div class="ci-title">${c.title}</div><div class="ci-preview">${c.messages.length} msgs</div>`;
+    d.onclick=()=>{selectFreeChat(c.id);switchTab('chats');setNavActive('navConversas');};
+    res.appendChild(d);
+  });
+}
+
+function openArtefatos(){
+  // Mostra artefatos gerados nas conversas
+  const allArtifacts=[];
+  freeChats.forEach(c=>{
+    c.messages.forEach(m=>{
+      if(m.role==='assistant'&&(m.content.includes('```html')||m.content.includes('```js')||m.content.includes('```python'))){
+        allArtifacts.push({chat:c.title,content:m.content.slice(0,100)+'...'});
+      }
+    });
+  });
+  if(!allArtifacts.length){alert('Nenhum artefato encontrado ainda. Peça ao NEXUS para gerar código ou HTML!');return;}
+  alert(`${allArtifacts.length} artefato(s) encontrado(s) nas suas conversas.`);
+}
+
+function openCodigo(){
+  // Filtra conversas com código
+  const codechats=freeChats.filter(c=>c.messages.some(m=>m.content.includes('```')));
+  if(!codechats.length){alert('Nenhuma conversa com código ainda!');return;}
+  selectFreeChat(codechats[0].id);switchTab('chats');setNavActive('navConversas');
+}
+
 // TABS
 function switchTab(t){
-  document.getElementById('tabA').className='tab'+(t==='agents'?' active':'');
-  document.getElementById('tabC').className='tab'+(t==='chats'?' active':'');
   document.getElementById('panelA').className='tab-panel'+(t==='agents'?' active':'');
   document.getElementById('panelC').className='tab-panel'+(t==='chats'?' active':'');
+  const ps=document.getElementById('panelSearch');if(ps)ps.className='tab-panel';
 }
 
 // AGENTS
@@ -847,7 +956,15 @@ async function send(){
   const el=document.getElementById('inp'),text=el.value.trim();
   const hasFiles=pendingFiles.length>0;
   if(!text&&!hasFiles)return;
-  if(currentMode==='none'){alert('Selecione um agente ou inicie um novo chat!');return;}
+  // Se nao tem chat ativo, cria um automaticamente
+  if(currentMode==='none'){
+    const id='fc_'+Date.now();
+    const title='CHAT '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    freeChats.unshift({id,title,messages:[],createdAt:new Date().toISOString()});
+    saveAll();activeFreeChatId=id;activeAgent=null;currentMode='free';
+    resetHeader();renderFreeChats();
+    document.getElementById('mhActions').style.display='flex';
+  }
 
   const fromVoice=voiceTriggered;voiceTriggered=false;
   el.value='';el.style.height='auto';busy=true;document.getElementById('sbtn').disabled=true;
