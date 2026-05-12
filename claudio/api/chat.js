@@ -15,14 +15,14 @@ export default async function handler(req, res) {
       const d = await r.json();
       const t = d.weather[1];
       const desc = t.hourly[4].weatherDesc[0].value;
-      const reply = `Previsao para ${command.city} amanha: ${desc}. Max ${t.maxtempC}°C, min ${t.mintempC}°C. Chuva: ${t.hourly[4].chanceofrain}%.`;
+      const reply = `Previsao para ${command.city} amanha: ${desc}. Max ${t.maxtempC}C, min ${t.mintempC}C. Chuva: ${t.hourly[4].chanceofrain}%.`;
       return res.status(200).json({ content: [{ text: reply }], usage: { input_tokens: 0, output_tokens: 0 } });
     } catch(e) {
       return res.status(200).json({ content: [{ text: 'Nao consegui obter o clima agora.' }], usage: { input_tokens: 0, output_tokens: 0 } });
     }
   }
 
-  // BUSCA NA WEB via DuckDuckGo
+  // BUSCA WEB
   if (command?.type === "search") {
     try {
       const q = encodeURIComponent(command.query);
@@ -32,35 +32,51 @@ export default async function handler(req, res) {
       if (d.AbstractText) result += d.AbstractText + '\n';
       if (d.Answer) result += d.Answer + '\n';
       if (d.RelatedTopics?.length) {
-        d.RelatedTopics.slice(0,3).forEach(t => { if(t.Text) result += '- ' + t.Text.slice(0,150) + '\n'; });
+        d.RelatedTopics.slice(0,4).forEach(t => { if(t.Text) result += '- ' + t.Text.slice(0,200) + '\n'; });
       }
-      const text = result.trim() || 'Nenhum resultado encontrado para: ' + command.query;
-      return res.status(200).json({ content: [{ text }], usage: { input_tokens: 0, output_tokens: 0 } });
+      return res.status(200).json({ content: [{ text: result.trim() || 'Sem resultados.' }], usage: { input_tokens: 0, output_tokens: 0 } });
     } catch(e) {
       return res.status(200).json({ content: [{ text: 'Erro na busca.' }], usage: { input_tokens: 0, output_tokens: 0 } });
     }
   }
 
-  // IA — com contexto de busca se houver
-  const basePrompt = agentInstr || `Voce e NEXUS AI, assistente de IA pessoal sofisticado de Gui, editor de video profissional. Responda em portugues brasileiro. Seja direto, preciso e util. Use markdown para formatar respostas longas.`;
-  const systemPrompt = searchResult
-    ? basePrompt + `\n\nVoce tem acesso ao seguinte resultado de busca na web para responder com informacoes atualizadas:\n${searchResult}\n\nUse essas informacoes para dar uma resposta precisa e atual.`
-    : basePrompt;
+  // ANTHROPIC CLAUDE
+  const BASE_SYSTEM = `Voce e NEXUS AI — um assistente de inteligencia artificial especializado no universo audiovisual, criado para ser o segundo cerebro de Gui, editor de video profissional com 3 anos de experiencia.
+
+ESPECIALIDADES PRINCIPAIS:
+- Edicao de video: Premiere Pro, Final Cut Pro, DaVinci Resolve, After Effects
+- Producao audiovisual: cinematografia, color grading, motion graphics, VFX
+- Musica para video: curadoria de trilhas, mood, sincronizacao, licenciamento
+- Roteiros: narrativas visuais, storytelling cinematografico, scripts
+- Marketing audiovisual: conteudo para redes sociais, campanhas, branding
+- Tecnologia: codecs, formatos, resolucoes, workflows de pos-producao
+- Tendencias: mercado audiovisual, plataformas, algoritmos, viral content
+
+PERSONALIDADE:
+- Direto, tecnico e sofisticado como um profissional sênior do audiovisual
+- Usa terminologia tecnica correta da industria
+- Da respostas praticas e acionaveis
+- Quando sugerir musicas: sempre pergunta mood, pacing, publico, duracao e plataforma — sugestoes em bullet points
+- Fala em portugues brasileiro fluente
+- Usa markdown para organizar respostas tecnicas`;
+
+  const systemPrompt = agentInstr
+    ? agentInstr + (searchResult ? `\n\nDADOS DE BUSCA WEB ATUAL:\n${searchResult}` : '')
+    : BASE_SYSTEM + (searchResult ? `\n\nDADOS DE BUSCA WEB ATUAL:\n${searchResult}` : '');
 
   try {
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.ANTHROPIC_API_KEY}`
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01"
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        max_tokens: 1200,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...(messages || [])
-        ]
+        model: "claude-sonnet-4-5",
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: messages || []
       })
     });
 
@@ -68,10 +84,10 @@ export default async function handler(req, res) {
     if (data.error) throw new Error(data.error.message);
 
     return res.status(200).json({
-      content: [{ text: data.choices[0].message.content }],
+      content: [{ text: data.content[0].text }],
       usage: {
-        input_tokens: data.usage?.prompt_tokens || 0,
-        output_tokens: data.usage?.completion_tokens || 0
+        input_tokens: data.usage?.input_tokens || 0,
+        output_tokens: data.usage?.output_tokens || 0
       }
     });
   } catch (e) {
