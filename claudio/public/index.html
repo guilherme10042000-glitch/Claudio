@@ -283,6 +283,7 @@ let activeAgent=null;   // agente selecionado
 let activeFreeChatId=null; // chat livre selecionado
 let currentMode='none'; // 'agent' | 'free' | 'none'
 let busy=false;
+let voiceTriggered=false; // true when triggered by voice (mic button or wake word)
 
 function saveAll(){
   localStorage.setItem('nx_agents',JSON.stringify(agents));
@@ -551,7 +552,7 @@ function startCmdListen(){
     document.getElementById('inp').value=cmd;
     setMicUI('proc');setWF(false);
     setVst('PROCESSANDO...','#ffaa00');
-    send();
+    send(true);
   };
   cmdRecog.onerror=()=>{if(!got){setMicUI('wake');setWF(false);setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');resumeWake();}};
   cmdRecog.onend=()=>{if(!got){setMicUI('wake');setWF(false);resumeWake();}};
@@ -575,24 +576,25 @@ function setVst(msg,col){const el=document.getElementById('vst');el.textContent=
 
 
 // SEND
-async function send(){
+async function send(fromVoice=false){
   if(busy)return;
   const el=document.getElementById('inp'),text=el.value.trim();
   if(!text)return;
   if(currentMode==='none'){alert('Selecione um agente ou inicie um novo chat!');return;}
+  voiceTriggered=fromVoice;
   el.value='';busy=true;document.getElementById('sbtn').disabled=true;
 
   // HORAS
   if(/que horas|horas sao|hora certa/i.test(text)){
     const n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0');
-    const r=`Sao ${h}h${m}, Gui.`;pushMsg('user',text);pushMsg('assistant',r);speak(r,()=>{if(wakeActive){setMicUI('wake');setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');}});
+    const r=`Sao ${h}h${m}, Gui.`;pushMsg('user',text);pushMsg('assistant',r);if(voiceTriggered)speak(r,()=>{if(wakeActive){setMicUI('wake');setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');}}); else if(wakeActive){setMicUI('wake');setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');};
     busy=false;document.getElementById('sbtn').disabled=false;el.focus();if(!wakeActive)setVst('MICROFONE INATIVO — CLIQUE EM MIC PARA ATIVAR','rgba(0,170,255,.2)');return;
   }
 
   // DATA
   if(/que dia|data de hoje|dia e hoje/i.test(text)){
     const n=new Date();const D=['domingo','segunda','terca','quarta','quinta','sexta','sabado'];const M=['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-    const r=`Hoje e ${D[n.getDay()]}, ${n.getDate()} de ${M[n.getMonth()]} de ${n.getFullYear()}.`;pushMsg('user',text);pushMsg('assistant',r);speak(r,()=>{if(wakeActive){setMicUI('wake');setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');}});
+    const r=`Hoje e ${D[n.getDay()]}, ${n.getDate()} de ${M[n.getMonth()]} de ${n.getFullYear()}.`;pushMsg('user',text);pushMsg('assistant',r);if(voiceTriggered)speak(r,()=>{if(wakeActive){setMicUI('wake');setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');}}); else if(wakeActive){setMicUI('wake');setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');};
     busy=false;document.getElementById('sbtn').disabled=false;el.focus();if(!wakeActive)setVst('MICROFONE INATIVO — CLIQUE EM MIC PARA ATIVAR','rgba(0,170,255,.2)');return;
   }
 
