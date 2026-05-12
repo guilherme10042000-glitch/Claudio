@@ -160,7 +160,7 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
 #uploadBtn{width:36px;height:36px;border-radius:5px;border:1px solid rgba(0,170,255,.15);cursor:pointer;background:rgba(0,170,255,.03);color:rgba(0,170,255,.45);display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;flex-shrink:0;}
 #uploadBtn:hover{background:rgba(0,170,255,.08);color:var(--blue);}
 #fileInput{display:none;}
-#inp{flex:1;background:rgba(0,170,255,.025);border:1px solid rgba(0,170,255,.1);border-radius:5px;padding:9px 12px;color:var(--bright);font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;caret-color:var(--blue);resize:none;min-height:38px;max-height:120px;line-height:1.4;}
+#inp{flex:1;background:rgba(0,170,255,.025);border:1px solid rgba(0,170,255,.1);border-radius:5px;padding:9px 12px;color:var(--bright);font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;caret-color:var(--blue);resize:none;min-height:38px;max-height:120px;line-height:1.4;overflow-y:auto;}
 #inp::placeholder{color:rgba(0,170,255,.13);}
 #inp:focus{border-color:rgba(0,170,255,.28);box-shadow:0 0 0 1px var(--blue-dim);}
 #sbtn{width:36px;height:36px;background:rgba(0,170,255,.08);border:1px solid var(--blue-dim);border-radius:5px;color:var(--blue);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
@@ -257,13 +257,9 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
       <span class="sb-nav-icon">&#9783;</span>
       <span>Projetos</span>
     </div>
-    <div class="sb-nav-item" id="navArtefatos" onclick="openArtefatos()">
-      <span class="sb-nav-icon">&#10070;</span>
-      <span>Artefatos</span>
-    </div>
-    <div class="sb-nav-item" id="navCodigo" onclick="openCodigo()">
-      <span class="sb-nav-icon">&#60;/&#62;</span>
-      <span>Código</span>
+    <div class="sb-nav-item" id="navAgentes" onclick="switchTab('agents');setNavActive('navAgentes')">
+      <span class="sb-nav-icon">&#9675;</span>
+      <span>Agentes</span>
     </div>
     <div class="sb-nav-item" id="navPersonalizar" onclick="openMemModal()">
       <span class="sb-nav-icon">&#9881;</span>
@@ -334,7 +330,7 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
       <div class="inz-row">
         <button id="vbtn" onclick="toggleMic()">MIC</button>
         <button id="uploadBtn" onclick="document.getElementById('fileInput').click()" title="Anexar arquivo">+</button>
-        <input type="file" id="fileInput" multiple accept=".pdf,.txt,.md,.js,.py,.html,.css,.json,.csv,image/*" onchange="handleFiles(this.files)"/>
+        <input type="file" id="fileInput" multiple accept=".pdf,.txt,.md,.js,.py,.html,.css,.json,.csv,image/*" onchange="handleFiles(this.files)" style="display:none!important;width:0;height:0;position:absolute;opacity:0;"/>
         <textarea id="inp" placeholder="Digite seu pensamento..." maxlength="8000" rows="1" oninput="autoResize(this)"></textarea>
         <button id="sbtn" onclick="send()">></button>
       </div>
@@ -956,14 +952,15 @@ async function send(){
   const el=document.getElementById('inp'),text=el.value.trim();
   const hasFiles=pendingFiles.length>0;
   if(!text&&!hasFiles)return;
-  // Se nao tem chat ativo, cria um automaticamente
-  if(currentMode==='none'){
+  // Se nao tem chat ativo, cria automaticamente
+  if(currentMode==='none'||(!activeAgent&&!activeFreeChatId)){
     const id='fc_'+Date.now();
     const title='CHAT '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     freeChats.unshift({id,title,messages:[],createdAt:new Date().toISOString()});
     saveAll();activeFreeChatId=id;activeAgent=null;currentMode='free';
-    resetHeader();renderFreeChats();
+    resetHeader();renderFreeChats();renderChatArea();
     document.getElementById('mhActions').style.display='flex';
+    switchTab('chats');setNavActive('navConversas');
   }
 
   const fromVoice=voiceTriggered;voiceTriggered=false;
