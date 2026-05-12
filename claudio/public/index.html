@@ -26,7 +26,7 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
 .app{position:relative;z-index:10;display:grid;grid-template-columns:210px 1fr;height:100vh;}
 
 /* SIDEBAR */
-.sidebar{border-right:1px solid var(--border);display:flex;flex-direction:column;background:rgba(2,8,16,.97);overflow:hidden;}
+.sidebar{border-right:1px solid var(--border);display:flex;flex-direction:column;background:rgba(2,8,16,.97);overflow:hidden;min-width:210px;height:100vh;}
 .sb-logo-area{padding:16px 14px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .sb-logo{font-family:'Orbitron',monospace;font-size:17px;font-weight:900;color:var(--blue);letter-spacing:6px;text-shadow:0 0 18px var(--blue-glow);animation:lp 5s ease-in-out infinite;}
 @keyframes lp{0%,100%{text-shadow:0 0 18px var(--blue-glow)}50%{text-shadow:0 0 35px var(--blue),0 0 70px var(--blue-glow)}}
@@ -37,8 +37,8 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
 .tab:hover{color:rgba(0,170,255,.55);}
 .tab.active{color:var(--blue);border-bottom-color:var(--blue);}
 
-.tab-panel{display:none;flex-direction:column;flex:1;overflow:hidden;}
-.tab-panel.active{display:flex;}
+.tab-panel{display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
+.tab-panel.active{display:flex;flex:1;overflow:hidden;min-height:0;}
 
 .new-btn{margin:9px 11px 7px;padding:8px;background:rgba(0,170,255,.05);border:1px solid rgba(0,170,255,.16);border-radius:5px;color:var(--blue);cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;transition:all .2s;flex-shrink:0;}
 .new-btn:hover{background:rgba(0,170,255,.11);}
@@ -270,7 +270,7 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
 
     <!-- PANELS -->
     <!-- CHATS PANEL -->
-    <div class="tab-panel active" id="panelC" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="tab-panel active" id="panelC">
       <div class="sb-section-label">Recentes</div>
       <div class="scroll-list" id="chatsList">
         <div id="chatsItems"></div>
@@ -278,18 +278,23 @@ body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);he
     </div>
 
     <!-- AGENTS PANEL -->
-    <div class="tab-panel" id="panelA" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="tab-panel" id="panelA">
       <div class="sb-section-label">Projetos</div>
       <button class="new-btn" style="margin:0 10px 8px" onclick="openModal()">+ Novo projeto</button>
       <div class="scroll-list" id="agentsList"></div>
     </div>
 
     <!-- SEARCH PANEL -->
-    <div class="tab-panel" id="panelSearch" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="tab-panel" id="panelSearch">
       <div style="padding:8px 12px;">
         <input id="searchInput" class="ap-search" placeholder="Pesquisar conversas..." oninput="searchChats(this.value)" style="width:100%"/>
       </div>
       <div class="scroll-list" id="searchResults"></div>
+    </div>
+
+    <!-- BOTTOM SEARCH (always visible) -->
+    <div style="padding:6px 10px;border-top:1px solid var(--border);flex-shrink:0;">
+      <input class="ap-search" placeholder="Pesquisar conversas..." oninput="quickSearch(this.value)" style="width:100%;font-size:10px;padding:5px 8px;"/>
     </div>
 
   </aside>
@@ -460,6 +465,13 @@ function openSearch(){
   document.getElementById('panelSearch').className='tab-panel active';
   setNavActive(null);
   setTimeout(()=>document.getElementById('searchInput')?.focus(),100);
+}
+
+function quickSearch(query){
+  if(!query.trim())return;
+  openSearch();
+  document.getElementById('searchInput').value=query;
+  searchChats(query);
 }
 
 function searchChats(query){
