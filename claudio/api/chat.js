@@ -40,43 +40,44 @@ export default async function handler(req, res) {
     }
   }
 
-  // ANTHROPIC CLAUDE
-  const BASE_SYSTEM = `Voce e NEXUS AI — um assistente de inteligencia artificial especializado no universo audiovisual, criado para ser o segundo cerebro de Gui, editor de video profissional com 3 anos de experiencia.
+  // GROQ — foco audiovisual
+  const BASE_SYSTEM = `Voce e NEXUS AI — assistente de inteligencia artificial especializado no universo audiovisual, criado para ser o segundo cerebro de Gui, editor de video profissional com 3 anos de experiencia.
 
-ESPECIALIDADES PRINCIPAIS:
+ESPECIALIDADES:
 - Edicao de video: Premiere Pro, Final Cut Pro, DaVinci Resolve, After Effects
 - Producao audiovisual: cinematografia, color grading, motion graphics, VFX
 - Musica para video: curadoria de trilhas, mood, sincronizacao, licenciamento
 - Roteiros: narrativas visuais, storytelling cinematografico, scripts
-- Marketing audiovisual: conteudo para redes sociais, campanhas, branding
+- Marketing audiovisual: redes sociais, campanhas, branding
 - Tecnologia: codecs, formatos, resolucoes, workflows de pos-producao
-- Tendencias: mercado audiovisual, plataformas, algoritmos, viral content
+- Tendencias: mercado audiovisual, plataformas, algoritmos
 
 PERSONALIDADE:
-- Direto, tecnico e sofisticado como um profissional sênior do audiovisual
+- Direto, tecnico e sofisticado como profissional senior do audiovisual
 - Usa terminologia tecnica correta da industria
-- Da respostas praticas e acionaveis
-- Quando sugerir musicas: sempre pergunta mood, pacing, publico, duracao e plataforma — sugestoes em bullet points
-- Fala em portugues brasileiro fluente
+- Respostas praticas e acionaveis
+- Sugestoes de musica: sempre pergunta mood, pacing, publico, duracao e plataforma — bullet points
+- Portugues brasileiro fluente
 - Usa markdown para organizar respostas tecnicas`;
 
   const systemPrompt = agentInstr
-    ? agentInstr + (searchResult ? `\n\nDADOS DE BUSCA WEB ATUAL:\n${searchResult}` : '')
-    : BASE_SYSTEM + (searchResult ? `\n\nDADOS DE BUSCA WEB ATUAL:\n${searchResult}` : '');
+    ? agentInstr + (searchResult ? `\n\nDADOS DE BUSCA WEB:\n${searchResult}` : '')
+    : BASE_SYSTEM + (searchResult ? `\n\nDADOS DE BUSCA WEB:\n${searchResult}` : '');
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01"
+        "Authorization": `Bearer ${process.env.ANTHROPIC_API_KEY}`
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5",
+        model: "llama-3.3-70b-versatile",
         max_tokens: 1500,
-        system: systemPrompt,
-        messages: messages || []
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...(messages || [])
+        ]
       })
     });
 
@@ -84,10 +85,10 @@ PERSONALIDADE:
     if (data.error) throw new Error(data.error.message);
 
     return res.status(200).json({
-      content: [{ text: data.content[0].text }],
+      content: [{ text: data.choices[0].message.content }],
       usage: {
-        input_tokens: data.usage?.input_tokens || 0,
-        output_tokens: data.usage?.output_tokens || 0
+        input_tokens: data.usage?.prompt_tokens || 0,
+        output_tokens: data.usage?.completion_tokens || 0
       }
     });
   } catch (e) {
