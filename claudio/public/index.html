@@ -455,29 +455,124 @@ function createAgent(){
 }
 document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-// VOICE
-let micActive=false,recog=null;
+// WAKE WORD SYSTEM
+const WAKE_WORDS=['ei nexus','oi nexus','hey nexus','nexus'];
+let wakeActive=false,wakeRecog=null,cmdRecog=null,isSpeaking=false,bestVoice=null;
+
+function loadVoices(){
+  const try_=()=>{
+    const vs=window.speechSynthesis.getVoices();
+    if(!vs.length){setTimeout(try_,100);return;}
+    const pri=[v=>v.name.includes('Luciana'),v=>v.name.includes('Google')&&v.lang==='pt-BR',v=>v.lang==='pt-BR',v=>v.lang.startsWith('pt')];
+    for(const t of pri){const v=vs.find(t);if(v){bestVoice=v;break;}}
+  };
+  if(window.speechSynthesis.getVoices().length)try_();
+  else window.speechSynthesis.onvoiceschanged=try_;
+}
+loadVoices();
+
+function speak(text,onDone){
+  if(!window.speechSynthesis){if(onDone)onDone();return;}
+  window.speechSynthesis.cancel();
+  const clean=text.replace(/\*\*(.*?)\*\*/g,'$1').replace(/\*(.*?)\*/g,'$1').replace(/[#\n]/g,' ').trim().slice(0,500);
+  const u=new SpeechSynthesisUtterance(clean);
+  if(bestVoice)u.voice=bestVoice;
+  u.lang='pt-BR';u.rate=0.9;u.pitch=1.0;u.volume=1.0;
+  isSpeaking=true;
+  const done=()=>{isSpeaking=false;if(onDone)onDone();if(wakeActive)setTimeout(startWakeListen,300);};
+  u.onend=done;u.onerror=done;
+  window.speechSynthesis.speak(u);
+}
+
+function beep(){
+  try{const ac=new(window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sine';o.frequency.setValueAtTime(660,ac.currentTime);o.frequency.exponentialRampToValueAtTime(880,ac.currentTime+.12);g.gain.setValueAtTime(.16,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.18);o.start();o.stop(ac.currentTime+.2);}catch(e){}
+}
+
 function toggleMic(){
-  if(micActive){stopMic();return;}
+  if(wakeActive){stopVoice();return;}
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){setVst('USE GOOGLE CHROME PARA VOZ','#ff4444');return;}
-  navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
-    s.getTracks().forEach(t=>t.stop());startMic();
-  }).catch(()=>setVst('PERMISSAO DE MICROFONE NEGADA','#ff4444'));
+  if(!SR){setVst('USE GOOGLE CHROME','#ff4444');return;}
+  navigator.mediaDevices.getUserMedia({audio:true})
+    .then(s=>{s.getTracks().forEach(t=>t.stop());startVoice();})
+    .catch(()=>setVst('PERMISSAO NEGADA — VERIFIQUE O CHROME','#ff4444'));
 }
-function startMic(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  recog=new SR();recog.lang='pt-BR';recog.continuous=false;recog.interimResults=false;recog.maxAlternatives=1;
-  micActive=true;setMicUI(true);setVst('OUVINDO... FALE SEU COMANDO','#00aaff');setWF(true);
-  recog.onresult=e=>{const t=e.results[0][0].transcript.trim();if(t){document.getElementById('inp').value=t;setVst('CAPTADO: '+t.slice(0,40).toUpperCase(),'#00ccff');send();}stopMic();};
-  recog.onerror=e=>{setVst(e.error==='no-speech'?'NENHUMA VOZ — TENTE NOVAMENTE':'ERRO: '+e.error.toUpperCase(),'#ff8844');stopMic();};
-  recog.onend=()=>{if(micActive)stopMic();};
-  try{recog.start();}catch(e){setVst('ERRO AO INICIAR','#ff4444');stopMic();}
+
+function startVoice(){
+  wakeActive=true;
+  setMicUI('wake');
+  setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');
+  speak('Sistema de voz ativo. Me chame quando precisar.',()=>startWakeListen());
 }
-function stopMic(){micActive=false;try{recog&&recog.stop();}catch(e){}setMicUI(false);setWF(false);if(!busy)setVst('MICROFONE INATIVO — CLIQUE EM MIC PARA ATIVAR','rgba(0,170,255,.2)');}
-function setMicUI(on){const b=document.getElementById('vbtn');b.className=on?'active':'';b.textContent=on?'STOP':'MIC';}
+
+function stopVoice(){
+  wakeActive=false;
+  try{wakeRecog&&wakeRecog.abort();}catch(e){}
+  try{cmdRecog&&cmdRecog.abort();}catch(e){}
+  window.speechSynthesis.cancel();
+  isSpeaking=false;setMicUI('off');setWF(false);
+  setVst('MICROFONE INATIVO','rgba(0,170,255,.2)');
+}
+
+function startWakeListen(){
+  if(!wakeActive||isSpeaking)return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;
+  wakeRecog=new SR();wakeRecog.lang='pt-BR';wakeRecog.continuous=false;wakeRecog.interimResults=false;wakeRecog.maxAlternatives=5;
+  wakeRecog.onresult=e=>{
+    if(!wakeActive)return;
+    const alts=Array.from(e.results[0]).map(a=>a.transcript.toLowerCase().trim());
+    if(alts.some(t=>WAKE_WORDS.some(w=>t.includes(w)))){onWake();}
+    else resumeWake();
+  };
+  wakeRecog.onerror=e=>{if(e.error!=='aborted'&&wakeActive)setTimeout(resumeWake,500);};
+  wakeRecog.onend=()=>{if(wakeActive&&!isSpeaking)resumeWake();};
+  try{wakeRecog.start();}catch(e){setTimeout(resumeWake,400);}
+}
+
+function resumeWake(){
+  if(!wakeActive||isSpeaking)return;
+  try{wakeRecog&&wakeRecog.abort();}catch(e){}
+  setTimeout(()=>{if(wakeActive&&!isSpeaking)startWakeListen();},260);
+}
+
+function onWake(){
+  setMicUI('listening');setVst('OUVINDO...','#00aaff');setWF(true);beep();
+  setTimeout(startCmdListen,380);
+}
+
+function startCmdListen(){
+  if(!wakeActive)return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;
+  let got=false;
+  cmdRecog=new SR();cmdRecog.lang='pt-BR';cmdRecog.continuous=false;cmdRecog.interimResults=false;cmdRecog.maxAlternatives=3;
+  cmdRecog.onresult=e=>{
+    got=true;
+    const cmd=e.results[0][0].transcript.trim();
+    if(cmd.length<2){resumeWake();return;}
+    document.getElementById('inp').value=cmd;
+    setMicUI('proc');setWF(false);
+    setVst('PROCESSANDO...','#ffaa00');
+    send();
+  };
+  cmdRecog.onerror=()=>{if(!got){setMicUI('wake');setWF(false);setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');resumeWake();}};
+  cmdRecog.onend=()=>{if(!got){setMicUI('wake');setWF(false);resumeWake();}};
+  try{cmdRecog.start();}catch(e){setMicUI('wake');resumeWake();}
+}
+
+function setMicUI(s){
+  const b=document.getElementById('vbtn');
+  const styles={
+    off:['','MIC','',''],
+    wake:['','MIC','rgba(0,170,255,.08)','rgba(0,170,255,.2)'],
+    listening:['active','OUV','',''],
+    proc:['','PROC','rgba(255,150,0,.1)','rgba(255,150,0,.3)']
+  };
+  const [cls,txt,bg,bc]=styles[s]||styles.off;
+  b.className=cls;b.textContent=txt;
+  if(bg)b.style.background=bg;if(bc)b.style.borderColor=bc;
+}
+
 function setVst(msg,col){const el=document.getElementById('vst');el.textContent=msg;el.style.color=col||'rgba(0,170,255,.2)';}
-function speak(text){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text.replace(/\*\*(.*?)\*\*/g,'$1').replace(/\*(.*?)\*/g,'$1').replace(/\n/g,' ').slice(0,380));u.lang='pt-BR';u.rate=1.05;u.pitch=.88;window.speechSynthesis.speak(u);}
+
 
 // SEND
 async function send(){
@@ -490,15 +585,15 @@ async function send(){
   // HORAS
   if(/que horas|horas sao|hora certa/i.test(text)){
     const n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0');
-    const r=`Sao ${h}h${m}, Gui.`;pushMsg('user',text);pushMsg('assistant',r);speak(r);
-    busy=false;document.getElementById('sbtn').disabled=false;el.focus();setVst('MICROFONE INATIVO — CLIQUE EM MIC PARA ATIVAR','rgba(0,170,255,.2)');return;
+    const r=`Sao ${h}h${m}, Gui.`;pushMsg('user',text);pushMsg('assistant',r);speak(r,()=>{if(wakeActive){setMicUI('wake');setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');}});
+    busy=false;document.getElementById('sbtn').disabled=false;el.focus();if(!wakeActive)setVst('MICROFONE INATIVO — CLIQUE EM MIC PARA ATIVAR','rgba(0,170,255,.2)');return;
   }
 
   // DATA
   if(/que dia|data de hoje|dia e hoje/i.test(text)){
     const n=new Date();const D=['domingo','segunda','terca','quarta','quinta','sexta','sabado'];const M=['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-    const r=`Hoje e ${D[n.getDay()]}, ${n.getDate()} de ${M[n.getMonth()]} de ${n.getFullYear()}.`;pushMsg('user',text);pushMsg('assistant',r);speak(r);
-    busy=false;document.getElementById('sbtn').disabled=false;el.focus();setVst('MICROFONE INATIVO — CLIQUE EM MIC PARA ATIVAR','rgba(0,170,255,.2)');return;
+    const r=`Hoje e ${D[n.getDay()]}, ${n.getDate()} de ${M[n.getMonth()]} de ${n.getFullYear()}.`;pushMsg('user',text);pushMsg('assistant',r);speak(r,()=>{if(wakeActive){setMicUI('wake');setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');}});
+    busy=false;document.getElementById('sbtn').disabled=false;el.focus();if(!wakeActive)setVst('MICROFONE INATIVO — CLIQUE EM MIC PARA ATIVAR','rgba(0,170,255,.2)');return;
   }
 
   // CLIMA
@@ -518,8 +613,8 @@ async function send(){
   try{
     const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hist.slice(-20),agentInstr:sysPrompt})});
     const d=await r.json();if(d.error)throw new Error(d.error.message);
-    const rep=d.content[0].text;setTyp(false);pushMsg('assistant',rep);speak(rep);
-    setVst('MICROFONE INATIVO — CLIQUE EM MIC PARA ATIVAR','rgba(0,170,255,.2)');
+    const rep=d.content[0].text;setTyp(false);pushMsg('assistant',rep);
+    speak(rep,()=>{if(wakeActive){setMicUI('wake');setVst('DIGA "EI NEXUS" PARA ATIVAR','rgba(0,200,255,.6)');}else{setVst('MICROFONE INATIVO — CLIQUE EM MIC PARA ATIVAR','rgba(0,170,255,.2)');}});
   }catch(e){setTyp(false);pushMsg('assistant','Erro: '+e.message);setVst('ERRO DE CONEXAO','#ff4444');}
   busy=false;document.getElementById('sbtn').disabled=false;el.focus();
 }
